@@ -1,11 +1,13 @@
 package com.jd.mltest;
 
+import org.junit.Test;
+
 /**
  *
  */
 public class TestNothing {
 
-    //@Test
+    @Test
     public void testNothing() {}
 
 }
