@@ -13,6 +13,7 @@ public class TestNothing {
     public void testNothing() {
         DoubleMatrix2D helloMatrix = new DenseDoubleMatrix2D(4,5);
         helloMatrix.assign(1D);
+        //test
     }
 
 }
