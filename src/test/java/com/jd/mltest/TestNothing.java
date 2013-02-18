@@ -100,16 +100,21 @@ public class TestNothing {
         //Now we have for each Xi, the difference between predictect by the hypothesis and the actual Yi
         hypothesies.assign(dependent, Functions.minus );
 
-
         //Transpose Examples(MxN) to NxM so we can matrix multiply by hypothesis Nx1
+        //Note that the Transpose is constant time and doesn't create a new matrix.
         DoubleMatrix2D transposed = algebra.transpose(independent);
 
         DoubleMatrix1D deltas     = algebra.mult(transposed, hypothesies );
 
-        // 1/m * alpha
+
+
+        // Scale the deltas by 1/m and learning rate alhpa.  (alpha/m)
         deltas.assign(Functions.mult(modifier));
 
-        return( deltas );
+        //Theta = Theta - Deltas
+        thetas.assign( deltas, Functions.minus );
+
+        return( thetas );
     }
 
     @Test
