@@ -2,7 +2,6 @@ package com.jd.mltest;
 
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
-import cern.colt.matrix.doublealgo.Transform;
 import cern.colt.matrix.impl.DenseDoubleMatrix1D;
 import cern.colt.matrix.linalg.Algebra;
 import cern.jet.math.Functions;
@@ -41,60 +40,7 @@ public class TestNothing {
      *
      */
     @Test
-    public void testDescent() {
-        Algebra algebra = new Algebra();
-        final int    NUM_EXAMPLES = 3; //M
-        final int    NUM_PARAMS   = 2; //N
-        final double ALPHA        = .01;
-
-        //These are the weights for linear regression (Theta or Beta depending on your preference)
-        DoubleMatrix1D thetas           = new DenseDoubleMatrix1D(NUM_PARAMS+1);
-
-        //rows,columns
-        //Xi
-        //These are the example data, i(down the column) is instance, j is each feature (across the row)
-        DoubleMatrix2D examples         = new DenseDoubleMatrix2D(NUM_EXAMPLES,NUM_PARAMS+1);
-
-        //Yi
-        //These are the results of the example linear equation.
-        DoubleMatrix1D exampleResult    = new DenseDoubleMatrix1D(NUM_EXAMPLES);
-
-        examples.assign(new double[][]{{0,1,2},{0,2,4},{0,3,6}} );
-
-        exampleResult.assign(new double[]{1,2,3});
-
-        thetas.assign(new double[]{1,1,1});
-
-        //I think this can just skip the transpose of theta.
-        //This is the result of every Xi run through the theta (hypothesis fn)
-        //So each Xj feature is multiplied by its Theata, to get the results of the hypotesis
-        DoubleMatrix1D hypothesies = algebra.mult( examples, thetas );
-
-        //hypothesis - Y   (vector
-        //Now we have for each Xi, the difference between predictect by the hypothesis and the actual Yi
-        hypothesies.assign(exampleResult, Functions.minus );
-
-
-        //Transpose Examples(MxN) to NxM so we can matrix multiply by hypothesis Nx1
-        DoubleMatrix2D transposed = algebra.transpose(examples);
-
-        //
-        //DoubleMatrix1D deltas     = algebra.mult(transposed, hypothesies );
-
-        DoubleMatrix1D deltas     = algebra.mult(transposed, hypothesies );
-
-        System.out.println(deltas);
-
-        //* Xj
-
-        //hypothesis * Xij
-
-
-    }
-
-    @Test
     public void testDescentFoo() {
-        Algebra algebra = new Algebra();
         final int    NUM_EXAMPLES = 3; //M
         final int    NUM_PARAMS   = 2; //N
         final double ALPHA        = .01;
