@@ -7,6 +7,9 @@ import cern.colt.matrix.linalg.Algebra;
 import cern.jet.math.Functions;
 import org.junit.Test;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
+
+import java.util.Random;
+
 import static org.junit.Assert.*;
 
 /**
@@ -44,6 +47,7 @@ public class TestNothing {
         final int    NUM_EXAMPLES = 8; //M
         final int    NUM_PARAMS   = 2; //N
         final double ALPHA        = .01;
+        Random random = new Random();
 
         //These are the weights for linear regression (Theta or Beta depending on your preference)
         DoubleMatrix1D thetas           = new DenseDoubleMatrix1D(NUM_PARAMS+1);
@@ -60,14 +64,14 @@ public class TestNothing {
         //initialize Independent Xi
         //Going to create test data y= .5(x1) + .33(x2)
         for( int x=0;x<NUM_EXAMPLES;x++) {
-            independent.set(x, 0, 0); //y=1
-            independent.set(x, 1, 2 * x);
-            independent.set(x, 2, 3 * x);
+            independent.set(x, 0, 1); //We always set this to 1 for the intercept
+            independent.set(x, 1, x);
+            independent.set(x, 2, x );
         }
 
         //initialize dependent Yi
         for( int x=0;x<NUM_EXAMPLES;x++) {
-            dependent.set(x, (x + 1));
+            dependent.set(x, (.5D*(double)x)+((double)x/3.0));
         }
 
         //Initialize Thetas to all 1.
@@ -75,7 +79,7 @@ public class TestNothing {
             thetas.set(x,1);
         }
 
-        for( int x=0;x<100;x++) {
+        for( int x=0;x<100000;x++) {
             thetas = descent( ALPHA, thetas, independent, dependent );
             if( x%10 == 0) {
                 System.out.println(thetas);
@@ -83,6 +87,101 @@ public class TestNothing {
         }
     }
 
+
+    @Test
+    public void testLinearDescent() {
+        final int    NUM_EXAMPLES   = 8; //M
+        final int    NUM_PARAMS     = 1; //N
+        final double ALPHA          = .01;
+        final double TEST_DELTA     = 0.00001;
+        final int    NUM_ITERATIONS = 10000;
+
+        //These are the weights for linear regression (Theta or Beta depending on your preference)
+        DoubleMatrix1D thetas           = new DenseDoubleMatrix1D(NUM_PARAMS+1);
+
+        //rows,columns
+        //Xi
+        //These are the example data, i(down the column) is instance, j is each feature (across the row)
+        DoubleMatrix2D independent      = new DenseDoubleMatrix2D(NUM_EXAMPLES,NUM_PARAMS+1);
+
+        //Yi
+        //These are the results of the example linear equation.
+        DoubleMatrix1D dependent        = new DenseDoubleMatrix1D(NUM_EXAMPLES);
+
+        //initialize Independent Xi
+        //Going to create test data y= .5(x1)
+        for( int x=0;x<NUM_EXAMPLES;x++) {
+            independent.set(x, 0, 1); //We always set this to 1 for the intercept
+            independent.set(x, 1, (double)x);
+        }
+
+        //initialize dependent Yi
+        for( int x=0;x<NUM_EXAMPLES;x++) {
+            dependent.set(x, (.5D*(double)x) );
+        }
+
+        //Initialize Thetas to all 1.
+        for( int x=0;x<NUM_PARAMS+1;x++) {
+            thetas.set(x,1);
+        }
+
+        for( int x=0;x<NUM_ITERATIONS;x++) {
+            thetas = descent( ALPHA, thetas, independent, dependent );
+        }
+
+        //0 intercept
+        assertEquals(0,thetas.get(0),TEST_DELTA);
+        //.5x
+        assertEquals(0.5,thetas.get(1),TEST_DELTA);
+    }
+
+
+    @Test
+    public void testLinearDescentIntercept() {
+        final int    NUM_EXAMPLES   = 8; //M
+        final int    NUM_PARAMS     = 1; //N
+        final double ALPHA          = .01;
+        final double TEST_DELTA     = 0.00001;
+        final int    NUM_ITERATIONS = 10000;
+
+        //These are the weights for linear regression (Theta or Beta depending on your preference)
+        DoubleMatrix1D thetas           = new DenseDoubleMatrix1D(NUM_PARAMS+1);
+
+        //rows,columns
+        //Xi
+        //These are the example data, i(down the column) is instance, j is each feature (across the row)
+        DoubleMatrix2D independent      = new DenseDoubleMatrix2D(NUM_EXAMPLES,NUM_PARAMS+1);
+
+        //Yi
+        //These are the results of the example linear equation.
+        DoubleMatrix1D dependent        = new DenseDoubleMatrix1D(NUM_EXAMPLES);
+
+        //initialize Independent Xi
+        //Going to create test data y= .5(x1) + 7
+        for( int x=0;x<NUM_EXAMPLES;x++) {
+            independent.set(x, 0, 1); //We always set this to 1 for the intercept
+            independent.set(x, 1, (double)x);
+        }
+
+        //initialize dependent Yi
+        for( int x=0;x<NUM_EXAMPLES;x++) {
+            dependent.set(x, 7.0+(.5D*(double)x) );
+        }
+
+        //Initialize Thetas to all 1.
+        for( int x=0;x<NUM_PARAMS+1;x++) {
+            thetas.set(x,1);
+        }
+
+        for( int x=0;x<NUM_ITERATIONS;x++) {
+            thetas = descent( ALPHA, thetas, independent, dependent );
+        }
+
+        //0 intercept
+        assertEquals(7.0,thetas.get(0),TEST_DELTA);
+        //.5x
+        assertEquals(0.5,thetas.get(1),TEST_DELTA);
+    }
 
     public DoubleMatrix1D descent(double         alpha,
                                   DoubleMatrix1D thetas,
@@ -97,6 +196,9 @@ public class TestNothing {
         //This is the result of every Xi run through the theta (hypothesis fn)
         //So each Xj feature is multiplied by its Theata, to get the results of the hypotesis
         DoubleMatrix1D hypothesies = algebra.mult( independent, thetas );
+
+
+        //System.out.println(hypothesies);
 
         //hypothesis - Y   (vector
         //Now we have for each Xi, the difference between predictect by the hypothesis and the actual Yi
