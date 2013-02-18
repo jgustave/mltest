@@ -40,8 +40,8 @@ public class TestNothing {
      *
      */
     @Test
-    public void testDescentFoo() {
-        final int    NUM_EXAMPLES = 3; //M
+    public void testDescent() {
+        final int    NUM_EXAMPLES = 8; //M
         final int    NUM_PARAMS   = 2; //N
         final double ALPHA        = .01;
 
@@ -77,7 +77,7 @@ public class TestNothing {
 
         for( int x=0;x<20;x++) {
             thetas = descent( ALPHA, thetas, independent, dependent );
-            //System.out.println(thetas);
+            System.out.println(thetas);
         }
     }
 
