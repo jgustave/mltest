@@ -75,9 +75,11 @@ public class TestNothing {
             thetas.set(x,1);
         }
 
-        for( int x=0;x<20;x++) {
+        for( int x=0;x<100;x++) {
             thetas = descent( ALPHA, thetas, independent, dependent );
-            System.out.println(thetas);
+            if( x%10 == 0) {
+                System.out.println(thetas);
+            }
         }
     }
 
