@@ -176,6 +176,7 @@ public class TestSimpleDescent {
         //Now we have for each Xi, the difference between predicted by the hypothesis and the actual Yi
         hypothesies.assign(dependent, Functions.minus);
 
+
         //Transpose Examples(MxN) to NxM so we can matrix multiply by hypothesis Nx1
         //Note that the Transpose is constant time and doesn't create a new matrix.
         DoubleMatrix2D transposed = algebra.transpose(independent);
@@ -185,10 +186,14 @@ public class TestSimpleDescent {
 
 
         // Scale the deltas by 1/m and learning rate alhpa.  (alpha/m)
-        deltas.assign(Functions.mult(modifier));
+        //deltas.assign(Functions.mult(modifier));
 
         //Theta = Theta - Deltas
-        thetas.assign( deltas, Functions.minus );
+        //thetas.assign( deltas, Functions.minus );
+
+        // thetas = thetas - (deltas*modifier)  in one step
+        thetas.assign(deltas, Functions.minusMult(modifier));
+
 
         return( thetas );
     }
