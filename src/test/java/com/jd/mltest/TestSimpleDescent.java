@@ -46,8 +46,10 @@ public class TestSimpleDescent {
         final double ALPHA          = .01;
         final int    NUM_ITERATIONS = 100000;
         Random random = new Random();
+        double w0 = 10.0;
         double w1 = .5;
         double w2 = (1.0/3.0);
+
 
         //These are the weights for linear regression (Theta or Beta depending on your preference)
         DoubleMatrix1D thetas           = new DenseDoubleMatrix1D(NUM_PARAMS+1);
@@ -73,7 +75,7 @@ public class TestSimpleDescent {
 
         //initialize dependent Yi
         for( int x=0;x<NUM_EXAMPLES;x++) {
-            dependent.set(x, 10.0 +  (w1*independent.get(x,1)) + (w2*independent.get(x,2)) );
+            dependent.set(x, w0 +  (w1*independent.get(x,1)) + (w2*independent.get(x,2)) );
         }
 
 //        System.out.println(independent);
@@ -95,7 +97,7 @@ public class TestSimpleDescent {
         //rails real quick.
 
         //TODO: Not sure why this isn't what I put in...
-        assertEquals(10.0,thetas.get(0),TEST_DELTA);
+        assertEquals(w0,thetas.get(0),TEST_DELTA);
         assertEquals(w1,thetas.get(1),TEST_DELTA);
         assertEquals(w2,thetas.get(2),TEST_DELTA);
     }
