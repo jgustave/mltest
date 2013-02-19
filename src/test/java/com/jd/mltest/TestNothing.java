@@ -9,6 +9,8 @@ import org.junit.Test;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 
 
+import java.util.Random;
+
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -22,67 +24,6 @@ public class TestNothing {
         helloMatrix.assign(1D);
         //test
     }
-
-
-    @Test
-    /**
-     * Predicts blood pressure from age and weight
-     */
-    public void testDescentBlood() {
-        final int    NUM_EXAMPLES   = 11; //M
-        final int    NUM_PARAMS     = 2; //N
-        final double ALPHA          = .00001;
-        final int    NUM_ITERATIONS = 100000000;
-
-        //These are the weights for linear regression (Theta or Beta depending on your preference)
-        DoubleMatrix1D thetas           = new DenseDoubleMatrix1D(NUM_PARAMS+1);
-
-        //rows,columns
-        //Xi
-        //These are the example data, i(down the column) is instance, j is each feature (across the row)
-        DoubleMatrix2D independent      = new DenseDoubleMatrix2D(NUM_EXAMPLES,NUM_PARAMS+1);
-
-        //Yi
-        //These are the results of the example linear equation.
-        DoubleMatrix1D dependent        = new DenseDoubleMatrix1D(NUM_EXAMPLES);
-
-        //initialize Independent Xi
-        independent.assign(new double[][]{  {1,52,173},
-                                            {1,59,184},
-                                            {1,67,194},
-                                            {1,73,211},
-                                            {1,64,196},
-                                            {1,74,220},
-                                            {1,54,188},
-                                            {1,61,188},
-                                            {1,65,207},
-                                            {1,46,167},
-                                            {1,72,217}} );
-
-        //initialize dependent Yi
-        dependent.assign(new double[]{132,143,153,162,154,168,137,149,159,128,166});
-
-        //Initialize Thetas to all 1.
-        for( int x=0;x<NUM_PARAMS+1;x++) {
-            thetas.set(x,1);
-        }
-
-        for( int x=0;x<NUM_ITERATIONS;x++) {
-            thetas = descent( ALPHA, thetas, independent, dependent );
-//            if( x%10 == 0) {
-//                System.out.println(thetas);
-//            }
-        }
-
-        System.out.println(thetas);
-//        assertEquals(10.0,thetas.get(0),TEST_DELTA);
-//        assertEquals(.5,thetas.get(1),TEST_DELTA);
-//        assertEquals(1D/3D,thetas.get(2),TEST_DELTA);
-    }
-
-
-
-
 
 
     /**
@@ -109,7 +50,10 @@ public class TestNothing {
         final int    NUM_EXAMPLES   = 8; //M
         final int    NUM_PARAMS     = 2; //N
         final double ALPHA          = .01;
-        final int    NUM_ITERATIONS = 10000;
+        final int    NUM_ITERATIONS = 100000;
+        Random random = new Random();
+        double w1 = .5;
+        double w2 = (1.0/3.0);
 
         //These are the weights for linear regression (Theta or Beta depending on your preference)
         DoubleMatrix1D thetas           = new DenseDoubleMatrix1D(NUM_PARAMS+1);
@@ -126,8 +70,8 @@ public class TestNothing {
         //initialize Independent Xi
         //Going to create test data y= .5(x1) + .33(x2)
         for( int x=0;x<NUM_EXAMPLES;x++) {
-            double x1 = x;
-            double x2 = 2.0*x;
+            double x1 = random.nextDouble();
+            double x2 = random.nextDouble();
             independent.set(x, 0, 1); //We always set this to 1 for the intercept
             independent.set(x, 1, x1);
             independent.set(x, 2, x2 );
@@ -135,9 +79,7 @@ public class TestNothing {
 
         //initialize dependent Yi
         for( int x=0;x<NUM_EXAMPLES;x++) {
-            double x1 = x;
-            double x2 = 2.0*x;
-            dependent.set(x, 10.0+(x1/2.0)+(x2/3.0));
+            dependent.set(x, 10.0 +  (w1*independent.get(x,1)) + (w2*independent.get(x,2)) );
         }
 
 //        System.out.println(independent);
@@ -162,8 +104,8 @@ public class TestNothing {
 
         //TODO: Not sure why this isn't what I put in...
         assertEquals(10.0,thetas.get(0),TEST_DELTA);
-//        assertEquals(.5,thetas.get(1),TEST_DELTA);
-//        assertEquals(1D/3D,thetas.get(2),TEST_DELTA);
+        assertEquals(w1,thetas.get(1),TEST_DELTA);
+        assertEquals(w2,thetas.get(2),TEST_DELTA);
     }
 
 
