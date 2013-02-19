@@ -210,11 +210,11 @@ public class TestSimpleDescent {
                                                                                  {2,3,4},
                                                                                  {1,0,2}});
 
-        System.out.println(examples);
+        //System.out.println(examples);
 
         //I think this can just skip the transpose of theta.
         DoubleMatrix1D result = algebra.mult( examples, thetas );
-        System.out.println(result);
+        //System.out.println(result);
         //1+2+3
         //2+6+12
         //1+0+6
