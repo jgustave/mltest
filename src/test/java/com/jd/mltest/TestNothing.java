@@ -103,6 +103,7 @@ public class TestNothing {
      * We also multiply the partial by ALPHA, the learning rate.
      *
      */
+    @SuppressWarnings ("UnnecessaryLocalVariable")
     @Test
     public void testDescentMultiple() {
         final int    NUM_EXAMPLES   = 8; //M
