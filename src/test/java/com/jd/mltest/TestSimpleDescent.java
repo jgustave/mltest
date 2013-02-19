@@ -16,14 +16,8 @@ import static org.junit.Assert.assertEquals;
 /**
  *
  */
-public class TestNothing {
+public class TestSimpleDescent {
     private static final double TEST_DELTA     = 0.0001;
-    @Test
-    public void testNothing() {
-        DoubleMatrix2D helloMatrix = new DenseDoubleMatrix2D(4,5);
-        helloMatrix.assign(1D);
-        //test
-    }
 
 
     /**
@@ -92,12 +86,10 @@ public class TestNothing {
 
         for( int x=0;x<NUM_ITERATIONS;x++) {
             thetas = descent( ALPHA, thetas, independent, dependent );
-            if( x%1000 == 0) {
-                System.out.println(thetas);
-            }
+//            if( x%1000 == 0) {
+//                System.out.println(thetas);
+//            }
         }
-
-        System.out.println(thetas);
 
         //It seems like if we don't regularize to Zero mean, then the learning rate has to go way up or it goes off the
         //rails real quick.
@@ -106,57 +98,6 @@ public class TestNothing {
         assertEquals(10.0,thetas.get(0),TEST_DELTA);
         assertEquals(w1,thetas.get(1),TEST_DELTA);
         assertEquals(w2,thetas.get(2),TEST_DELTA);
-    }
-
-
-    @Test
-    /**
-     * Test a simple y=.5x
-     */
-    public void testLinearDescent() {
-        final int    NUM_EXAMPLES   = 8; //M
-        final int    NUM_PARAMS     = 1; //N
-        final double ALPHA          = .01;
-        final int    NUM_ITERATIONS = 10000;
-        final double EXPECTED       = 0.5;
-
-        //These are the weights for linear regression (Theta or Beta depending on your preference)
-        DoubleMatrix1D thetas           = new DenseDoubleMatrix1D(NUM_PARAMS+1);
-
-        //rows,columns
-        //Xi
-        //These are the example data, i(down the column) is instance, j is each feature (across the row)
-        DoubleMatrix2D independent      = new DenseDoubleMatrix2D(NUM_EXAMPLES,NUM_PARAMS+1);
-
-        //Yi
-        //These are the results of the example linear equation.
-        DoubleMatrix1D dependent        = new DenseDoubleMatrix1D(NUM_EXAMPLES);
-
-        //initialize Independent Xi
-        //Going to create test data y= .5(x1)
-        for( int x=0;x<NUM_EXAMPLES;x++) {
-            independent.set(x, 0, 1); //We always set this to 1 for the intercept
-            independent.set(x, 1, (double)x);
-        }
-
-        //initialize dependent Yi
-        for( int x=0;x<NUM_EXAMPLES;x++) {
-            dependent.set(x, (EXPECTED*(double)x) );
-        }
-
-        //Initialize Thetas to all 1.
-        for( int x=0;x<NUM_PARAMS+1;x++) {
-            thetas.set(x,1);
-        }
-
-        for( int x=0;x<NUM_ITERATIONS;x++) {
-            thetas = descent( ALPHA, thetas, independent, dependent );
-        }
-
-        //0 intercept
-        assertEquals(0,thetas.get(0),TEST_DELTA);
-        //.5x
-        assertEquals(EXPECTED,thetas.get(1),TEST_DELTA);
     }
 
 
