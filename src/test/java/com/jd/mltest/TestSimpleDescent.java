@@ -15,7 +15,7 @@ import java.util.Random;
 import static org.junit.Assert.assertEquals;
 
 /**
- *
+ * Just the proof of concept area.. No classes yet.
  */
 public class TestSimpleDescent {
     private static final double EPSILON = 0.0001;
