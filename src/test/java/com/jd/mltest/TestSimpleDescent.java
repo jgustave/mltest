@@ -1,5 +1,6 @@
 package com.jd.mltest;
 
+import cern.colt.function.DoubleFunction;
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix1D;
@@ -17,7 +18,7 @@ import static org.junit.Assert.assertEquals;
  *
  */
 public class TestSimpleDescent {
-    private static final double TEST_DELTA     = 0.0001;
+    private static final double EPSILON = 0.0001;
 
 
     /**
@@ -97,9 +98,9 @@ public class TestSimpleDescent {
         //rails real quick.
 
         //TODO: Not sure why this isn't what I put in...
-        assertEquals(w0,thetas.get(0),TEST_DELTA);
-        assertEquals(w1,thetas.get(1),TEST_DELTA);
-        assertEquals(w2,thetas.get(2),TEST_DELTA);
+        assertEquals(w0,thetas.get(0), EPSILON);
+        assertEquals(w1,thetas.get(1), EPSILON);
+        assertEquals(w2,thetas.get(2), EPSILON);
     }
 
 
@@ -147,9 +148,9 @@ public class TestSimpleDescent {
         }
 
         //0 intercept
-        assertEquals(7.0,thetas.get(0),TEST_DELTA);
+        assertEquals(7.0,thetas.get(0), EPSILON);
         //.5x
-        assertEquals(0.5,thetas.get(1),TEST_DELTA);
+        assertEquals(0.5,thetas.get(1), EPSILON);
     }
 
     /**
@@ -199,6 +200,146 @@ public class TestSimpleDescent {
 
         return( thetas );
     }
+
+
+    /**
+     * sum((X * theta - y) .* X(:, i)) ./ m;
+     * @param alpha Learning Rate
+     * @param thetas Current Thetas
+     * @param independent
+     * @param dependent
+     * @return new Thetas
+     */
+    public DoubleMatrix1D logisticDescent(double         alpha,
+                                          DoubleMatrix1D thetas,
+                                          DoubleMatrix2D independent,
+                                          DoubleMatrix1D dependent ) {
+        Algebra algebra     = new Algebra();
+
+        // ALPHA*(1/M) in one.
+        //double  modifier    = alpha / (double)independent.rows();
+
+        //hypothesis is 1/( 1+ e ^ (theta(Transposed) * X))
+        DoubleMatrix1D hypothesies = algebra.mult( independent, thetas );
+
+        //h = 1/(1+ e^h)
+        hypothesies.assign(new DoubleFunction() {
+            @Override
+            public double apply (double val) {
+                return( logit( val ) );
+            }
+        });
+
+        //hypothesis - Y
+        //Now we have for each Xi, the difference between predicted by the hypothesis and the actual Yi
+        hypothesies.assign(dependent, Functions.minus);
+
+
+        //Transpose Examples(MxN) to NxM so we can matrix multiply by hypothesis Nx1
+        //Note that the Transpose is constant time and doesn't create a new matrix.
+        DoubleMatrix2D transposed = algebra.transpose(independent);
+
+        DoubleMatrix1D deltas     = algebra.mult(transposed, hypothesies );
+
+
+        // thetas = thetas - (deltas*alpha)  in one step
+        thetas.assign(deltas, Functions.minusMult(alpha));
+
+
+        return( thetas );
+    }
+
+    @Test
+    public void testLogisticDescentMultiple() {
+        //Cost function: -y * log(h(x)) - (1-y)log(1-h(x))
+        //(-1/m) Sum(Cost)
+        final int    NUM_EXAMPLES   = 1000; //M
+        final int    NUM_PARAMS     = 2; //N
+        final double ALPHA          = .001;
+        final int    NUM_ITERATIONS = 100000;
+        //final int    PRINT_AT        = 10000;
+        Random random = new Random();
+        double w0 = 6.0;
+        double w1 = .5;
+        double w2 = (1.0/3.0);
+
+
+        //These are the weights for linear regression (Theta or Beta depending on your preference)
+        DoubleMatrix1D thetas           = new DenseDoubleMatrix1D(NUM_PARAMS+1);
+
+        //rows,columns
+        //Xi
+        //These are the example data, i(down the column) is instance, j is each feature (across the row)
+        DoubleMatrix2D independent      = new DenseDoubleMatrix2D(NUM_EXAMPLES,NUM_PARAMS+1);
+
+        //Yi
+        //These are the results of the example linear equation.
+        DoubleMatrix1D dependent        = new DenseDoubleMatrix1D(NUM_EXAMPLES);
+
+        //initialize Independent Xi
+        //Going to create test data y= .5(x1) + .33(x2) + 10
+        for( int x=0;x<NUM_EXAMPLES;x++) {
+            double x1 = random.nextDouble();
+            double x2 = random.nextDouble();
+
+            if( random.nextBoolean() ) {
+                x1 *= -1.0;
+            }
+            if( random.nextBoolean() ) {
+                x2 *= -1.0;
+            }
+
+            independent.set(x, 0, 1); //We always set this to 1 for the intercept
+            independent.set(x, 1, x1);
+            independent.set(x, 2, x2 );
+        }
+
+        //initialize dependent Yi
+        for( int x=0;x<NUM_EXAMPLES;x++) {
+            double val      = w0 +  (w1*independent.get(x,1)) + (w2*independent.get(x,2));
+            double logitVal = logit( val );
+//            if( logitVal < 0.5 ) {
+//                logitVal = 0;
+//            }else {
+//                logitVal = 1;
+//            }
+            dependent.set(x, logitVal );
+        }
+
+//        System.out.println(independent);
+//        System.out.println(dependent);
+
+        //Initialize Thetas to all 1.
+        for( int x=0;x<NUM_PARAMS+1;x++) {
+            thetas.set(x,1);
+        }
+
+        for( int x=0;x<NUM_ITERATIONS;x++) {
+            thetas = logisticDescent( ALPHA, thetas, independent, dependent );
+//            if( x%PRINT_AT == 0) {
+//                System.out.println(thetas);
+//            }
+        }
+
+        //It seems like if we don't regularize to Zero mean, then the learning rate has to go way up or it goes off the
+        //rails real quick.
+
+        //TODO: Not sure why this isn't what I put in...
+        assertEquals(w0,thetas.get(0), EPSILON);
+        assertEquals(w1,thetas.get(1), EPSILON);
+        assertEquals(w2,thetas.get(2), EPSILON);
+    }
+
+    @Test
+    public void testLogistic() {
+
+
+    }
+
+    public static double logit( double val ) {
+        return( 1.0 / (1.0 + Math.exp(-val)));
+    }
+
 
     @Test
     /**
