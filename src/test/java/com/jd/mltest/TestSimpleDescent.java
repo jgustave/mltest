@@ -219,10 +219,10 @@ public class TestSimpleDescent {
         // ALPHA*(1/M) in one.
         //double  modifier    = alpha / (double)independent.rows();
 
-        //hypothesis is 1/( 1+ e ^ (theta(Transposed) * X))
+        //hypothesis is 1/( 1+ e ^ -(theta(Transposed) * X))
         DoubleMatrix1D hypothesies = algebra.mult( independent, thetas );
 
-        //h = 1/(1+ e^h)
+        //h = 1/(1+ e^-h)
         hypothesies.assign(new DoubleFunction() {
             @Override
             public double apply (double val) {
@@ -328,12 +328,6 @@ public class TestSimpleDescent {
         assertEquals(w0,thetas.get(0), EPSILON);
         assertEquals(w1,thetas.get(1), EPSILON);
         assertEquals(w2,thetas.get(2), EPSILON);
-    }
-
-    @Test
-    public void testLogistic() {
-
-
     }
 
     public static double logit( double val ) {
