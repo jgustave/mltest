@@ -324,6 +324,14 @@ public class TestSimpleDescent {
         assertEquals(w2,thetas.get(2), EPSILON);
     }
 
+    public static double evalLogistic( double[] parameters, double[] dependent ) {
+        double sum = 0;
+        for( int x=0;x<parameters.length;x++) {
+            sum += parameters[x] * dependent[x];
+        }
+        return( logit( sum ) );
+    }
+
     @Test
     public void testLogisticDescentMultipleTwo() {
         //Cost function: -y * log(h(x)) - (1-y)log(1-h(x))
@@ -462,6 +470,11 @@ public class TestSimpleDescent {
 //        thetas.set(1,0.206232);
 //        thetas.set(2,0.201472);
 
+// From Weka (I think it is predicting on output = 0)
+//        x0    25.1613
+//        x1    -0.2062
+//        x2    -0.2015
+
 
         for( int x=0;x<NUM_ITERATIONS;x++) {
             thetas = logisticDescent( ALPHA, thetas, independent, dependent );
@@ -473,10 +486,18 @@ public class TestSimpleDescent {
         //It seems like if we don't regularize to Zero mean, then the learning rate has to go way up or it goes off the
         //rails real quick.
 
+
+
         //TODO: Not sure why this isn't what I put in...
         assertEquals(-25.161334,thetas.get(0), EPSILON);
         assertEquals(0.206232,thetas.get(1), EPSILON);
         assertEquals(0.201472,thetas.get(2), EPSILON);
+    }
+
+    @Test
+    public void testClassify() {
+        System.out.println(evalLogistic( new double[]{25.1613,-0.2062,-0.2015}, new double[] {1,45,85} ));
+        System.out.println(evalLogistic( new double[]{-25.1613,0.2062,0.2015}, new double[] {1,45,85} ));
     }
 
     private static void add (DoubleMatrix2D independent, DoubleMatrix1D dependent, AtomicInteger cntr, double x1, double x2, int y) {
