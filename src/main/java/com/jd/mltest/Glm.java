@@ -10,7 +10,7 @@ import cern.jet.math.Functions;
 
 /**
  * For my personal learning only.. Use a proper library
- * test
+ * 
  * A Simple GLM class using Linear Descent.
  * For my learning purposes only... use a real library.
  * Sketch of Linear Regression gradient descent
