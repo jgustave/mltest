@@ -5,6 +5,7 @@ import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix1D;
 import cern.colt.matrix.linalg.Algebra;
 
+import cern.colt.matrix.linalg.SeqBlas;
 import org.junit.Test;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 
@@ -300,6 +301,12 @@ public class TestSimpleDescent {
                                                                   20,
                                                                   7}));
 
+        //Test in place matrix X vector
+        SeqBlas.seqBlas.dgemv(false,1.0,examples,thetas,0,result);
+
+        assertEquals(result, new DenseDoubleMatrix1D(new double[]{6,
+                                                                  20,
+                                                                  7}));
 
     }
 
