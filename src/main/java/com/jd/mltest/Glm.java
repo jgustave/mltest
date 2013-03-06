@@ -9,8 +9,26 @@ import cern.colt.matrix.linalg.SeqBlas;
 import cern.jet.math.Functions;
 
 /**
+ * For my personal learning only.. Use a proper library
+ *
  * A Simple GLM class using Linear Descent.
  * For my learning purposes only... use a real library.
+ * Sketch of Linear Regression gradient descent
+ * We have our test data, Xij, where i is the instance, and j is the parameter
+ * Lets do i is a row, and j is a column
+ * We have Yi which is the solution to each Xi linear equation.
+ * We have THETAj which are the weights for each Xj,
+ * X0 and J0 are going to be the intercept terms, so X0 is always 1.
+ *
+ * Our cost function will be (1/2m) SUM( (Hi - Yi)^2 )  (for all M examples)
+ * Making our partial derivative: (1/m) SUM( (Hi - Yi ) Xi )  (for all M examples)
+ * Where Hi is the hypothisis evaluated for Xi is what we get by evaluating an Xi with all of our Thetas, and
+ * Yi is obviously the expected result.
+ * Xi is the vector of all Xj params...
+ * So we will update our Thetas using the partial derivative
+ *
+ * We also multiply the partial by ALPHA, the learning rate.
+ *
  */
 public class Glm {
 
@@ -25,9 +43,6 @@ public class Glm {
 
     //Size M(num examples). (h)  which is independent * theta
     private final DoubleMatrix1D hypothesies;
-
-    //The transpose points at the same data, just knows it's the transpose.
-    //private final DoubleMatrix2D independentTransposed;
 
     //changes to apply to theta
     private final DoubleMatrix1D deltas;
@@ -131,10 +146,6 @@ public class Glm {
 
         //In Place matrix(T) x vector
         SeqBlas.seqBlas.dgemv(true,1.0,independent,hypothesies,0,deltas);
-
-//        DoubleMatrix2D transposed = algebra.transpose(independent);
-//
-//        DoubleMatrix1D deltas     = algebra.mult(transposed, hypothesies );
 
         // thetas = thetas - (deltas*modifier)  in one step
         thetas.assign(deltas, Functions.minusMult(modifier));
