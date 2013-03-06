@@ -9,7 +9,8 @@ import cern.colt.matrix.linalg.SeqBlas;
 import cern.jet.math.Functions;
 
 /**
- *
+ * A Simple GLM class using Linear Descent.
+ * For my learning purposes only... use a real library.
  */
 public class Glm {
 
@@ -26,7 +27,7 @@ public class Glm {
     private final DoubleMatrix1D hypothesies;
 
     //The transpose points at the same data, just knows it's the transpose.
-    private final DoubleMatrix2D independentTransposed;
+    //private final DoubleMatrix2D independentTransposed;
 
     //changes to apply to theta
     private final DoubleMatrix1D deltas;
@@ -57,7 +58,7 @@ public class Glm {
         this.thetas                 = new DenseDoubleMatrix1D(independent.columns());
         this.hypothesies            = new DenseDoubleMatrix1D(dependent.size());
 
-        this.independentTransposed  = algebra.transpose(independent);
+        //this.independentTransposed  = algebra.transpose(independent);
         this.deltas                 = new DenseDoubleMatrix1D(thetas.size());
 
         for( int x=0;x<thetas.size();x++) {
@@ -76,7 +77,7 @@ public class Glm {
      */
     private void calcHypothesisError() {
 
-        //In Place
+        //In Place matrix x vector
         SeqBlas.seqBlas.dgemv(false,1.0,independent,thetas,0,hypothesies);
 
         //hypothesies = algebra.mult( independent, thetas );
@@ -128,7 +129,8 @@ public class Glm {
     public void step() {
         calcHypothesisError();
 
-        SeqBlas.seqBlas.dgemv(false,1.0,independentTransposed,hypothesies,0,deltas);
+        //In Place matrix(T) x vector
+        SeqBlas.seqBlas.dgemv(true,1.0,independent,hypothesies,0,deltas);
 
 //        DoubleMatrix2D transposed = algebra.transpose(independent);
 //
