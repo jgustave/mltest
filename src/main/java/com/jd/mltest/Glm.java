@@ -35,8 +35,6 @@ public class Glm {
     private final Algebra        algebra        = new Algebra();
 
 
-
-
     private final DoubleMatrix2D independent;
     private final DoubleMatrix1D dependent;
     private final DoubleMatrix1D thetas;
@@ -58,6 +56,12 @@ public class Glm {
     //Are we doing logistic regression or linear regression
     private final boolean        isLogistic;
 
+    /**
+     * @param independent
+     * @param dependent
+     * @param alpha
+     * @param isLogistic
+     */
     public Glm (DoubleMatrix2D independent,
                 DoubleMatrix1D dependent,
                 double         alpha,
@@ -73,7 +77,6 @@ public class Glm {
         this.thetas                 = new DenseDoubleMatrix1D(independent.columns());
         this.hypothesies            = new DenseDoubleMatrix1D(dependent.size());
 
-        //this.independentTransposed  = algebra.transpose(independent);
         this.deltas                 = new DenseDoubleMatrix1D(thetas.size());
 
         for( int x=0;x<thetas.size();x++) {
@@ -137,10 +140,17 @@ public class Glm {
         }
     }
 
+    /**
+     * Get the Current Theta parameters
+     * @return
+     */
     public DoubleMatrix1D getThetas () {
         return thetas;
     }
 
+    /**
+     * Take one step in the Linear Descent
+     */
     public void step() {
         calcHypothesisError();
 
@@ -151,6 +161,11 @@ public class Glm {
         thetas.assign(deltas, Functions.minusMult(modifier));
     }
 
+    /**
+     * The Logit function.. actually probably expit?
+     * @param val
+     * @return
+     */
     public static double logit( double val ) {
         return( 1.0 / (1.0 + Math.exp(-val)));
     }
