@@ -7,6 +7,7 @@ import cern.colt.matrix.impl.DenseDoubleMatrix1D;
 import cern.colt.matrix.linalg.Algebra;
 import cern.colt.matrix.linalg.SeqBlas;
 import cern.jet.math.Functions;
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
 /**
  * For my personal learning only.. Use a proper library
@@ -39,6 +40,9 @@ public class Glm {
     private final DoubleMatrix1D dependent;
     private final DoubleMatrix1D thetas;
 
+    //For Feature Scaling.
+    private final SummaryStatistics[] columnStats;
+
     //Size M(num examples). (h)  which is independent * theta
     private final DoubleMatrix1D hypothesies;
 
@@ -55,6 +59,8 @@ public class Glm {
 
     //Are we doing logistic regression or linear regression
     private final boolean        isLogistic;
+
+    private       boolean        isScaled = false;
 
     /**
      * @param independent
@@ -88,7 +94,86 @@ public class Glm {
         }else {
             this.modifier    = alpha / (double)independent.rows();
         }
+
+        this.columnStats = new SummaryStatistics[thetas.size()];
+        for( int x=0;x<columnStats.length;x++) {
+            this.columnStats[x] = new SummaryStatistics();
+        }
+
+        calculateStats();
     }
+
+
+    private void calculateStats () {
+        for( int x=0;x<independent.rows();x++) {
+            for( int y=0;y<independent.columns();y++) {
+                columnStats[y].addValue(independent.getQuick(x,y));
+            }
+        }
+    }
+
+    /**
+     *
+     * Scale:   x' = (x - mean) / (max-min)
+     * Unscale: x  = (-x' * min) + (x' * max) + mean
+     *
+     * or
+     *
+     * Scale:   x' = (x - mean) / stddev
+     * Unscale: x  = (x' * stddev) + mean
+     *
+     */
+    public void scaleInputs() {
+        if( independent.rows() < 2 ) {
+            return;
+        }
+
+        for( int x=0;x<independent.rows();x++) {
+            //Don't bother to scale the intercept (all 1's)
+            for( int y=1;y<independent.columns();y++) {
+                double scaled = scale( columnStats[y], independent.getQuick(x,y) );
+                independent.setQuick(x,y,scaled);
+            }
+        }
+        isScaled = true;
+    }
+
+    private double scale( SummaryStatistics stats, double input ) {
+        double mean     = stats.getMean();
+        double stddev   = stats.getStandardDeviation();
+        double scaled   = (input - mean) /  stddev;
+        return( scaled );
+    }
+
+    /**
+     * predict using the thetas, and scaling.
+     * @param params
+     * @return
+     */
+    public double predict(double... params ) {
+
+        if( isScaled ) {
+            //We need to scale our inputs first.
+            for( int x=0;x<params.length;x++) {
+                //x+1 because we skip the intercept
+                params[x] = scale( columnStats[x+1], params[x] );
+            }
+        }
+
+        double sum = thetas.get(0); //start with intercept
+        for( int x=0;x<params.length;x++) {
+            sum += params[x] * thetas.get(x+1);
+        }
+
+        if( isLogistic ) {
+            return( logit(sum) );
+
+        }else {
+            //Intercept + x1*theta1 + x2*theta2 ...
+            return( sum );
+        }
+    }
+
 
     /**
      * (h - y)
