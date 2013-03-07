@@ -30,6 +30,7 @@ import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
  *
  * We also multiply the partial by ALPHA, the learning rate.
  *
+ * Tikhonov_regularization
  */
 public class Glm {
 
@@ -212,15 +213,47 @@ public class Glm {
         if( isLogistic ) {
 
             //Sum for all samples M
-            //(-1/m) * SUM(  (Y * ln(h)) + ((1-Y) * ln(1-h))  )
+            //(-1/m) * SUM(  (Y * log(h)) + ((1-Y) * log(1-h))  )
 
             //two cross products. gives two scalars. add them. mult by (-1/m)
-                //Y * ln(h)
-                //(1-Y) * ln(1-h)
+                //Y * log(h)
+                //(1-Y) * log(1-h)
 
 
-            return(0);
+            //TOtally inefficient.. but will figure out the api later...
+            DoubleMatrix1D h        = algebra.mult( independent, thetas );
+            h.assign(new DoubleFunction() {
+                @Override
+                public double apply (double val) {
+                    return( logit( val ) );
+                }
+            });
+
+            DoubleMatrix1D lhs      = new DenseDoubleMatrix1D(h.toArray());
+            DoubleMatrix1D rhs      = new DenseDoubleMatrix1D(h.toArray());
+            DoubleMatrix1D rhDep    = new DenseDoubleMatrix1D(dependent.toArray());
+
+            lhs.assign( Functions.log );
+            rhs.assign( new DoubleFunction() {
+                @Override
+                public double apply (double val) {
+                    return( Math.log(1.0-val));
+                }
+            } );
+            rhDep.assign( new DoubleFunction() {
+                @Override
+                public double apply (double val) {
+                    return( 1.0-val);
+                }
+            } );
+
+            double cost = (-1.0/dependent.size())*(algebra.mult(dependent,lhs) + algebra.mult(rhDep,rhs));
+
+
+
+            return(cost);
         }else {
+            //assumes hypothesis is already h-y
             //(1/2m) * Sum( (h - y)^2 )
             //sum for all m examples
 
