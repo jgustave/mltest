@@ -122,6 +122,8 @@ public class Glm {
      * Scale:   x' = (x - mean) / stddev
      * Unscale: x  = (x' * stddev) + mean
      *
+     * if denom ==0, then skip divide. and reverse..
+     *
      */
     public void scaleInputs() {
         if( independent.rows() < 2 ) {
@@ -141,7 +143,12 @@ public class Glm {
     private double scale( SummaryStatistics stats, double input ) {
         double mean     = stats.getMean();
         double stddev   = stats.getStandardDeviation();
-        double scaled   = (input - mean) /  stddev;
+        double scaled   = (input - mean);
+
+        if( stddev != 0 ) {
+            scaled /= stddev;
+        }
+
         return( scaled );
     }
 
