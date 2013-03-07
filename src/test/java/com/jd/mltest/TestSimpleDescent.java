@@ -248,9 +248,11 @@ public class TestSimpleDescent {
         //rails real quick.
 
 
-        assertEquals(-25.161334,glm.getThetas().get(0), EPSILON);
-        assertEquals(0.206232,glm.getThetas().get(1), EPSILON);
-        assertEquals(0.201472,glm.getThetas().get(2), EPSILON);
+        assertEquals(-25.16133356066622,glm.getThetas().get(0), EPSILON);
+        assertEquals(0.20623171324620174,glm.getThetas().get(1), EPSILON);
+        assertEquals(0.20147160039363188, glm.getThetas().get(2), EPSILON);
+        
+        assertEquals(.7762906907271161,glm.predict(45,85), EPSILON);
     }
 
 
@@ -394,12 +396,11 @@ public class TestSimpleDescent {
         //rails real quick.
 
 
-        assertEquals(1.718449,glm.getThetas().get(0), EPSILON);
-        assertEquals(4.012903,glm.getThetas().get(1), EPSILON);
-        assertEquals(3.743903,glm.getThetas().get(2), EPSILON);
+        assertEquals(1.7184494794192797,glm.getThetas().get(0), EPSILON);
+        assertEquals(4.012902517515474,glm.getThetas().get(1), EPSILON);
+        assertEquals(3.743903039594484,glm.getThetas().get(2), EPSILON);
 
-        assertEquals(.7762906,glm.predict(45,85), EPSILON);
-        System.out.println(glm.predict(45,85));
+        assertEquals(.7762906907271161,glm.predict(45,85), EPSILON);
     }
 
 
@@ -407,7 +408,7 @@ public class TestSimpleDescent {
     @Test
     public void testClassify() {
         //System.out.println(evalLogistic( new double[]{25.1613,-0.2062,-0.2015}, new double[] {1,45,85} ));
-        System.out.println(evalLogistic(new double[]{-25.1613, 0.2062, 0.2015}, new double[]{1, 45, 85}));
+        System.out.println(evalLogistic(new double[]{-25.16133356066622, 0.20623171324620174, 0.20147160039363188}, new double[]{1, 45, 85}));
     }
 
     /**
