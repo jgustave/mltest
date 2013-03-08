@@ -9,6 +9,8 @@ import cern.colt.matrix.linalg.SeqBlas;
 import cern.jet.math.Functions;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
+import java.util.Random;
+
 /**
  * For my personal learning only.. Use a proper library
  *
@@ -57,9 +59,13 @@ public class Glm {
 
     //alpha * (1/m) in one or just alpha.
     private final double         modifier;
+    private final double         regVal;
 
     //Are we doing logistic regression or linear regression
     private final boolean        isLogistic;
+
+    //Regularization
+    private final Double         lambda;
 
     private       boolean        isScaled = false;
 
@@ -72,9 +78,11 @@ public class Glm {
     public Glm (DoubleMatrix2D independent,
                 DoubleMatrix1D dependent,
                 double         alpha,
-                boolean        isLogistic ) {
+                boolean        isLogistic,
+                Double         lambda ) {
 
 
+        this.lambda                 = lambda;
         this.isLogistic             = isLogistic;
         this.alpha                  = alpha;
 
@@ -86,14 +94,23 @@ public class Glm {
 
         this.deltas                 = new DenseDoubleMatrix1D(thetas.size());
 
+        Random rand = new Random();
         for( int x=0;x<thetas.size();x++) {
-            thetas.set(x,1);
+            thetas.set(x,rand.nextGaussian());
         }
 
         if( this.isLogistic ) {
+            //TODO: Not sure if this should be alpha/m or not.
+                //I think you are confused between gradient descent and
+                //the BFGS, etc that just wants J and derivative.
             this.modifier    = alpha;
         }else {
             this.modifier    = alpha / (double)independent.rows();
+        }
+        if( lambda != null ) {
+            regVal = (alpha*lambda)/dependent.size();
+        }else {
+            regVal = 0;
         }
 
         this.columnStats = new SummaryStatistics[thetas.size()];
@@ -102,6 +119,10 @@ public class Glm {
         }
 
         calculateStats();
+    }
+
+    public boolean isRegularized() {
+        return( lambda != null );
     }
 
 
@@ -191,6 +212,16 @@ public class Glm {
         //In Place matrix x vector
         SeqBlas.seqBlas.dgemv(false,1.0,independent,thetas,0,hypothesies);
 
+//        double accum = 0;
+//        for( int x=0;x<independent.rows();x++) {
+//            accum = 0;
+//            for( int y=0;y<independent.columns();y++) {
+//                double ind = independent.getQuick(x,y);
+//                double theta = thetas.get(y);
+//                accum += ind * theta;
+//            }
+//        }
+
         //hypothesies = algebra.mult( independent, thetas );
 
         if( isLogistic ) {
@@ -249,6 +280,16 @@ public class Glm {
 
             double cost = (-1.0/dependent.size())*(algebra.mult(dependent,lhs) + algebra.mult(rhDep,rhs));
 
+            if( isRegularized() ) {
+                double regularize = 0;
+                //(Lambda/(2m))* sum(theta^2)
+                //But sum is from 1 to N.. Skip intercept
+                for( int x=1;x<thetas.size();x++) {
+                    regularize += ( thetas.getQuick(x) * thetas.getQuick(x) );
+                }
+                regularize *= (lambda/(2*independent.size()));
+                cost += regularize;
+            }
 
 
             return(cost);
@@ -262,6 +303,9 @@ public class Glm {
 
             //h is
             return( (1.0/(2.0*hypothesies.size())) * sumSq );
+
+            //if regularized.. +  reg*SUM( theta^2 )
+            //                      FOR all theta (except intercept)
         }
     }
 
@@ -280,10 +324,32 @@ public class Glm {
         calcHypothesisError();
 
         //In Place matrix(T) x vector
-        SeqBlas.seqBlas.dgemv(true,1.0,independent,hypothesies,0,deltas);
+        if( isRegularized() ) {
 
-        // thetas = thetas - (deltas*modifier)  in one step
-        thetas.assign(deltas, Functions.minusMult(modifier));
+            //intercept is like normal.. theta = (thetas - (deltas*modifier))
+            //Linear
+                //all others theta = (theta*(1- (alpha*lambda/M) ) - (deltas*modifier)) where lambda is regularization
+                //Might also be for logistic.
+
+            //Deltas is Hypothesis error * independent
+            SeqBlas.seqBlas.dgemv(true,1.0,independent,hypothesies,0,deltas);
+
+            //Theta0 is the usual Theta0 - (Alpha/M)*Delta
+            thetas.set(0, thetas.get(0) - (modifier * deltas.get(0)) );
+
+            //Rest are: Theta*( 1- ((Alpha*Lambda)/M)) - (Alpha/M)*Delta
+            for( int x=1;x<thetas.size();x++) {
+                double theta = thetas.get(x);
+                thetas.set(x, (theta * (1.0 - regVal)) - (modifier * deltas.get(0)) );
+            }
+
+
+        }else {
+            //Get Deltas
+            SeqBlas.seqBlas.dgemv(true,1.0,independent,hypothesies,0,deltas);
+            // thetas = thetas - (deltas*modifier)  in one step
+            thetas.assign(deltas, Functions.minusMult(modifier));
+        }
     }
 
     /**

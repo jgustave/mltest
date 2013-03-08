@@ -10,6 +10,7 @@ import org.junit.Test;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 
 
+import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -74,7 +75,7 @@ public class TestSimpleDescent {
             dependent.set(x, w0 +  (w1*independent.get(x,1)) + (w2*independent.get(x,2)) );
         }
 
-        Glm glm = new Glm(independent,dependent,ALPHA, false );
+        Glm glm = new Glm(independent,dependent,ALPHA, false, null );
         //glm.scaleInputs();
 
 
@@ -132,7 +133,7 @@ public class TestSimpleDescent {
 
         initLogisticTest( independent, dependent );
 
-        Glm glm = new Glm(independent,dependent,ALPHA,true);
+        Glm glm = new Glm(independent,dependent,ALPHA,true, null);
 
 
         for( int x=0;x<NUM_ITERATIONS;x++) {
@@ -181,7 +182,7 @@ public class TestSimpleDescent {
         initLogisticTest( independent, dependent );
 
 
-        Glm glm = new Glm(independent,dependent,ALPHA,true);
+        Glm glm = new Glm(independent,dependent,ALPHA,true, null);
         glm.scaleInputs();
 
         for( int x=0;x<NUM_ITERATIONS;x++) {
@@ -202,6 +203,68 @@ public class TestSimpleDescent {
         assertEquals(3.743903039594484,glm.getThetas().get(2), EPSILON);
 
         assertEquals(.7762906907271161,glm.predict(45,85), EPSILON);
+    }
+
+
+
+    @Test
+    /**
+     * Now we have feature scaled and get the same results.
+     */
+    public void testLogisticDescentScaledAndRegular() {
+        //Cost function: -y * log(h(x)) - (1-y)log(1-h(x))
+        //(-1/m) Sum(Cost)
+
+        final double ALPHA          = .001;
+        final int    NUM_ITERATIONS = 10000000;
+        final int    PRINT_AT       = 100000;
+
+
+        //rows,columns
+        //Xi
+        //These are the example data, i(down the column) is instance, j is each feature (across the row)
+
+        DoubleMatrix2D independent      = new DenseDoubleMatrix2D(getIndep2());
+
+        //Yi
+        //These are the results of the example linear equation.
+        DoubleMatrix1D dependent        = new DenseDoubleMatrix1D(getDep2());
+
+
+        //Add all sort so interacitons
+        independent = mapFeature(independent);
+
+
+        Glm glm = new Glm(independent,dependent,ALPHA,true, 1.0 );
+
+        //For testing start at all 0.
+        //glm.getThetas().assign(0);
+
+
+
+        //glm.scaleInputs();
+
+        for( int x=0;x<NUM_ITERATIONS;x++) {
+            //thetas = logisticDescent( ALPHA, thetas, independent, dependent );
+            glm.step();
+            if( x%PRINT_AT == 0) {
+                System.out.println(glm.getThetas());
+                System.out.println(glm.getCost());
+            }
+        }
+
+        //From Test Coursera test data:
+        assertEquals(.693, glm.getCost(), EPSILON );
+
+        //It seems like if we don't regularize to Zero mean, then the learning rate has to go way up or it goes off the
+        //rails real quick.
+
+
+//        assertEquals(1.7184494794192797,glm.getThetas().get(0), EPSILON);
+//        assertEquals(4.012902517515474,glm.getThetas().get(1), EPSILON);
+//        assertEquals(3.743903039594484,glm.getThetas().get(2), EPSILON);
+
+//        assertEquals(.7762906907271161,glm.predict(45,85), EPSILON);
     }
 
 
@@ -368,5 +431,231 @@ public class TestSimpleDescent {
         add(independent,dependent,cntr,55.34001756003703,64.9319380069486,1);
         add(independent,dependent,cntr,74.77589300092767,89.52981289513276,1);
     }
+
+    public double[][] getIndep2() {
+        double[][] rawData = getData2();
+        double[][] result = new double[rawData.length][2];
+        for( int x=0;x<result.length;x++) {
+            result[x] = Arrays.copyOfRange(rawData[x],0,2);
+        }
+        return( result );
+    }
+    public double[] getDep2() {
+        double[][] rawData = getData2();
+        double[] result = new double[rawData.length];
+        for( int x=0;x<result.length;x++) {
+            result[x] = rawData[x][2];
+        }
+        return( result );
+    }
+
+    public double[][] getData2() {
+        double[][] result = new double[][] {
+        {0.051267,0.69956,1},
+        {-0.092742,0.68494,1},
+        {-0.21371,0.69225,1},
+        {-0.375,0.50219,1},
+        {-0.51325,0.46564,1},
+        {-0.52477,0.2098,1},
+        {-0.39804,0.034357,1},
+        {-0.30588,-0.19225,1},
+        {0.016705,-0.40424,1},
+        {0.13191,-0.51389,1},
+        {0.38537,-0.56506,1},
+        {0.52938,-0.5212,1},
+        {0.63882,-0.24342,1},
+        {0.73675,-0.18494,1},
+        {0.54666,0.48757,1},
+        {0.322,0.5826,1},
+        {0.16647,0.53874,1},
+        {-0.046659,0.81652,1},
+        {-0.17339,0.69956,1},
+        {-0.47869,0.63377,1},
+        {-0.60541,0.59722,1},
+        {-0.62846,0.33406,1},
+        {-0.59389,0.005117,1},
+        {-0.42108,-0.27266,1},
+        {-0.11578,-0.39693,1},
+        {0.20104,-0.60161,1},
+        {0.46601,-0.53582,1},
+        {0.67339,-0.53582,1},
+        {-0.13882,0.54605,1},
+        {-0.29435,0.77997,1},
+        {-0.26555,0.96272,1},
+        {-0.16187,0.8019,1},
+        {-0.17339,0.64839,1},
+        {-0.28283,0.47295,1},
+        {-0.36348,0.31213,1},
+        {-0.30012,0.027047,1},
+        {-0.23675,-0.21418,1},
+        {-0.06394,-0.18494,1},
+        {0.062788,-0.16301,1},
+        {0.22984,-0.41155,1},
+        {0.2932,-0.2288,1},
+        {0.48329,-0.18494,1},
+        {0.64459,-0.14108,1},
+        {0.46025,0.012427,1},
+        {0.6273,0.15863,1},
+        {0.57546,0.26827,1},
+        {0.72523,0.44371,1},
+        {0.22408,0.52412,1},
+        {0.44297,0.67032,1},
+        {0.322,0.69225,1},
+        {0.13767,0.57529,1},
+        {-0.0063364,0.39985,1},
+        {-0.092742,0.55336,1},
+        {-0.20795,0.35599,1},
+        {-0.20795,0.17325,1},
+        {-0.43836,0.21711,1},
+        {-0.21947,-0.016813,1},
+        {-0.13882,-0.27266,1},
+        {0.18376,0.93348,0},
+        {0.22408,0.77997,0},
+        {0.29896,0.61915,0},
+        {0.50634,0.75804,0},
+        {0.61578,0.7288,0},
+        {0.60426,0.59722,0},
+        {0.76555,0.50219,0},
+        {0.92684,0.3633,0},
+        {0.82316,0.27558,0},
+        {0.96141,0.085526,0},
+        {0.93836,0.012427,0},
+        {0.86348,-0.082602,0},
+        {0.89804,-0.20687,0},
+        {0.85196,-0.36769,0},
+        {0.82892,-0.5212,0},
+        {0.79435,-0.55775,0},
+        {0.59274,-0.7405,0},
+        {0.51786,-0.5943,0},
+        {0.46601,-0.41886,0},
+        {0.35081,-0.57968,0},
+        {0.28744,-0.76974,0},
+        {0.085829,-0.75512,0},
+        {0.14919,-0.57968,0},
+        {-0.13306,-0.4481,0},
+        {-0.40956,-0.41155,0},
+        {-0.39228,-0.25804,0},
+        {-0.74366,-0.25804,0},
+        {-0.69758,0.041667,0},
+        {-0.75518,0.2902,0},
+        {-0.69758,0.68494,0},
+        {-0.4038,0.70687,0},
+        {-0.38076,0.91886,0},
+        {-0.50749,0.90424,0},
+        {-0.54781,0.70687,0},
+        {0.10311,0.77997,0},
+        {0.057028,0.91886,0},
+        {-0.10426,0.99196,0},
+        {-0.081221,1.1089,0},
+        {0.28744,1.087,0},
+        {0.39689,0.82383,0},
+        {0.63882,0.88962,0},
+        {0.82316,0.66301,0},
+        {0.67339,0.64108,0},
+        {1.0709,0.10015,0},
+        {-0.046659,-0.57968,0},
+        {-0.23675,-0.63816,0},
+        {-0.15035,-0.36769,0},
+        {-0.49021,-0.3019,0},
+        {-0.46717,-0.13377,0},
+        {-0.28859,-0.060673,0},
+        {-0.61118,-0.067982,0},
+        {-0.66302,-0.21418,0},
+        {-0.59965,-0.41886,0},
+        {-0.72638,-0.082602,0},
+        {-0.83007,0.31213,0},
+        {-0.72062,0.53874,0},
+        {-0.59389,0.49488,0},
+        {-0.48445,0.99927,0},
+        {-0.0063364,0.99927,0},
+        {0.63265,-0.030612,0}
+        };
+        return( result );
+    }
+    /**
+     * Takes input matrix, and creates new features.
+     * skips first column, but combines 2nd and 3rd in various ways.
+     * X1, X2, X1.^2, X2.^2, X1*X2, X1*X2.^2, etc..
+     * @param input
+     * @return
+     */
+    public DoubleMatrix2D mapFeature(DoubleMatrix2D input){
+        DoubleMatrix2D result = new DenseDoubleMatrix2D(input.rows(),28);
+        for( int z=0;z<input.rows();z++) {
+            result.setQuick(z,0,1);
+        }
+
+        //We are going column by column..
+
+        double subResult = 0;
+        int destColumn = 1; //skip intercept
+        for( int i=1;i<=6;i++) {
+            for( int j=0;j<=i;j++) {
+                //int a = i-j;
+                if( (i-j) == 0 ) {
+                    //System.out.println(" Y^" +j  );
+                    for( int z=0;z<input.rows();z++) {
+                        double yInput = input.get(z,1);
+                        subResult = Math.pow(yInput,j);
+                        result.setQuick(z,destColumn,subResult);
+                    }
+                }
+                else if( j == 0 ) {
+                    //System.out.println("X^"+(i-j)  );
+                    for( int z=0;z<input.rows();z++) {
+                        double xInput = input.get(z,0);
+                        subResult = Math.pow(xInput,(i-j) );
+                        result.setQuick(z,destColumn,subResult);
+                    }
+
+                }
+                else {
+                    for( int z=0;z<input.rows();z++) {
+                        double xInput = input.get(z,0);
+                        double yInput = input.get(z,1);
+                        subResult = Math.pow(xInput,(i-j)) * Math.pow(yInput,j );
+                        result.setQuick(z,destColumn,subResult);
+                        //System.out.println("X^"+(i-j) + "* Y^" +j  );
+                    }
+                }
+
+                destColumn++;
+            }
+        }
+        return( result );
+    }
+
+    @Test
+    public void testFoo() {
+        int count = 0;
+        for( int i=1;i<=6;i++) {
+            for( int j=0;j<=i;j++) {
+                int a = i-j;
+                if( a == 0 ) {
+                    System.out.println(" Y^" +j  );
+                }
+                else if( j == 0 ) {
+                    System.out.println("X^"+(i-j)  );
+                }
+                else {
+                    System.out.println("X^"+(i-j) + "* Y^" +j  );
+                }
+                count++;
+            }
+        }
+        System.out.println("GOT:" + count);
+    }
+
+
+
+//    degree = 6;
+//    out = ones(size(X1(:,1)));
+//    for i = 1:degree
+//        for j = 0:i
+//            out(:, end+1) = (X1.^(i-j)).*(X2.^j);
+//        end
+//    end
+//
+//    end
 
 }
