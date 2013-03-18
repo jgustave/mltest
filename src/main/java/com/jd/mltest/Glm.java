@@ -205,7 +205,7 @@ public class Glm {
 
 
     /**
-     * (h - y)
+     * hypothesis is updated with (h - y)
      */
     private void calcHypothesisError() {
 
@@ -246,7 +246,7 @@ public class Glm {
             //Sum for all samples M
             //(-1/m) * SUM(  (Y * log(h)) + ((1-Y) * log(1-h))  )
 
-            //two cross products. gives two scalars. add them. mult by (-1/m)
+            //two vector cross products. gives two scalars. add them. mult by (-1/m)
                 //Y * log(h)
                 //(1-Y) * log(1-h)
 
@@ -278,7 +278,7 @@ public class Glm {
                 }
             } );
 
-            double cost = (-1.0/dependent.size())*(algebra.mult(dependent,lhs) + algebra.mult(rhDep,rhs));
+            double cost = (-1.0/getNumInstances())*(algebra.mult(dependent,lhs) + algebra.mult(rhDep,rhs));
 
             if( isRegularized() ) {
                 double regularize = 0;
@@ -287,11 +287,9 @@ public class Glm {
                 for( int x=1;x<thetas.size();x++) {
                     regularize += ( thetas.getQuick(x) * thetas.getQuick(x) );
                 }
-                regularize *= (lambda/(2*independent.size()));
+                regularize *= (lambda/(2*getNumInstances()));
                 cost += regularize;
             }
-
-
             return(cost);
         }else {
             //assumes hypothesis is already h-y
@@ -306,6 +304,43 @@ public class Glm {
 
             //if regularized.. +  reg*SUM( theta^2 )
             //                      FOR all theta (except intercept)
+        }
+    }
+
+    public DoubleMatrix1D getGradient() {
+
+        //hypothesis matrix is set to (h-y)
+        calcHypothesisError();
+
+        if( isLogistic ) {
+            if( isRegularized() ) {
+
+                //For Regularized LR, the first term (intercept) is not regularized.
+
+                //delta is in hypothesis after calcHypothesisError()
+
+                //delta = (1/m) * SUM( delta * xj )
+
+                // deltas matrix becomes SUM( delta * xj )
+                SeqBlas.seqBlas.dgemv(true,1.0,independent,hypothesies,0,deltas);
+
+                //scale by (1/m)
+                deltas.assign(Functions.mult(1.0/(double)getNumInstances()));
+
+                //Skip the intercept, and add regularization to all others.
+                double regularScale = lambda / (double)getNumInstances();
+                for( int x=1;x<deltas.size();x++) {
+                    //add (lambda/m)*thetaj
+                    double adjust = regularScale*thetas.getQuick(x);
+                    deltas.setQuick(x, deltas.getQuick(x) + adjust);
+                }
+
+                return( deltas );
+            }else {
+                return( null );
+            }
+        }else {
+            return( null );
         }
     }
 
@@ -331,7 +366,7 @@ public class Glm {
                 //all others theta = (theta*(1- (alpha*lambda/M) ) - (deltas*modifier)) where lambda is regularization
                 //Might also be for logistic.
 
-            //Deltas is Hypothesis error * independent
+            //Deltas becomes is Hypothesis error * independent
             SeqBlas.seqBlas.dgemv(true,1.0,independent,hypothesies,0,deltas);
 
             //Theta0 is the usual Theta0 - (Alpha/M)*Delta
@@ -361,4 +396,26 @@ public class Glm {
         return( 1.0 / (1.0 + Math.exp(-val)));
     }
 
+//    /**
+//     * M the number of data instances, rows. etc.
+//     * @return
+//     */
+    public long getNumInstances() {
+        return( dependent.size() );
+    }
+
+    public int getNumParameters() {
+        return( thetas.size() );
+    }
+
+
+
+//
+//    /**
+//     * (Lambda/2M) SUM( Theta^2 )
+//     * @return
+//     */
+//    public double getRegularizationValue () {
+//        return( (lambda / (2.0*dependent.size())) * algebra.mult(thetas,thetas) );
+//    }
 }

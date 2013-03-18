@@ -5,3 +5,7 @@ This is simply to familiarize myself with the concepts and the implementations o
 My First goal will be to implement Batch Linear Regression and Logistic Regression using gradient descent using Colt as
 the my linear algebra library.
 
+3/14/13  Success in my initial Linear and Logistic implementaitons using Gradient Descent.
+I'm going to now use Mallet to implement the same using gradient and cost functions and L-BFGS...
+and finally finishing on Neural Nets.
+

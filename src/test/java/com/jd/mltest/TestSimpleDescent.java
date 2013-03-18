@@ -238,10 +238,10 @@ public class TestSimpleDescent {
         Glm glm = new Glm(independent,dependent,ALPHA,true, 1.0 );
 
         //For testing start at all 0.
-        //glm.getThetas().assign(0);
+        glm.getThetas().assign(0);
 
 
-
+        //TODO: scaling input gives lots of NANs!
         //glm.scaleInputs();
 
         for( int x=0;x<NUM_ITERATIONS;x++) {
@@ -267,6 +267,123 @@ public class TestSimpleDescent {
 //        assertEquals(.7762906907271161,glm.predict(45,85), EPSILON);
     }
 
+
+    @Test
+    /**
+     * Test Cost and Gradient by hand
+     */
+    public void testRegLogisticCalcs() {
+        //2 params (plus Int), 2 instances.
+        //Lets verify by hand what these funcs should be
+
+        DoubleMatrix2D independent      = new DenseDoubleMatrix2D(new double[][]{{1.0,1.5,0.2},{1.0,0.3,0.4}});
+
+        //Yi
+        //These are the results of the example linear equation.
+        DoubleMatrix1D dependent        = new DenseDoubleMatrix1D(new double[]{1.0,0.0});
+
+
+        double ALPHA  = 0.1;
+        double LAMBDA = 1.0;
+
+        Glm glm = new Glm( independent, dependent, ALPHA, true, LAMBDA );
+
+        glm.getThetas().set(0,1.1);
+        glm.getThetas().set(1,1.2);
+        glm.getThetas().set(2,1.3);
+
+        double cost         = glm.getCost();
+        double[] gradient   = glm.getGradient().toArray();
+
+        //COST = ( (-1/m) * SUM( (Y * log(h))  +  ((1-Y)*log(1-h)) ) ) )   +  lambda/(2m) * Sum(theta^2)
+
+
+        double h1 = 1.0*1.1 + 1.5*1.2 + .2*1.3;
+        double h2 = 1.0*1.1 + .3*1.2  + .4*1.3;
+
+
+        h1 = Glm.logit(h1);
+        h2 = Glm.logit(h2);
+
+
+        double lhs = Math.log(h1);
+        double rhs = Math.log(1.0-h2);
+
+        double calcCost = (-1.0/2.0) * (lhs+rhs);
+        calcCost += ( (LAMBDA/(2.0*2.0)) * ((1.2*1.2) + (1.3*1.3)) );
+
+        assertEquals(cost,calcCost,EPSILON);
+
+
+        //TODO: test gradient
+
+        double diff0 = ((h1-1.0)*1.0) + ((h2-0.0)*1.0);
+        double diff1 = ((h1-1.0)*1.5) + ((h2-0.0)*0.3);
+        double diff2 = ((h1-1.0)*0.2) + ((h2-0.0)*0.4);
+
+        diff0 = diff0 * (1.0/2.0);
+        diff1 = diff1 * (1.0/2.0);
+        diff2 = diff2 * (1.0/2.0);
+
+        diff1 += (LAMBDA / 2.0) * 1.2;
+        diff2 += (LAMBDA / 2.0) * 1.3;
+
+
+        assertEquals(diff0,gradient[0],EPSILON);
+        assertEquals(diff1,gradient[1],EPSILON);
+        assertEquals(diff2,gradient[2],EPSILON);
+
+    }
+
+    @Test
+    /**
+     * Test Cost and Gradient by hand
+     */
+    public void testRegLogisticCalcsTwo() {
+        //2 params (plus Int), 2 instances.
+        //Lets verify by hand what these funcs should be
+
+        DoubleMatrix2D independent      = new DenseDoubleMatrix2D(new double[][]{{1.0,1.5,0.2},{1.0,0.3,0.4}});
+
+        //Yi
+        //These are the results of the example linear equation.
+        DoubleMatrix1D dependent        = new DenseDoubleMatrix1D(new double[]{1.0,1.0});
+
+
+        double ALPHA  = 0.1;
+        double LAMBDA = 1.0;
+
+        Glm glm = new Glm( independent, dependent, ALPHA, true, LAMBDA );
+
+        glm.getThetas().set(0,1.1);
+        glm.getThetas().set(1,1.2);
+        glm.getThetas().set(2,1.3);
+
+        double cost         = glm.getCost();
+        double[] gradient   = glm.getGradient().toArray();
+
+        //COST = ( (-1/m) * SUM( (Y * log(h))  +  ((1-Y)*log(1-h)) ) ) )   +  lambda/(2m) * Sum(theta^2)
+
+
+        double h1 = 1.0*1.1 + 1.5*1.2 + .2*1.3;
+        double h2 = 1.0*1.1 + .3*1.2  + .4*1.3;
+
+
+        h1 = Glm.logit(h1);
+        h2 = Glm.logit(h2);
+
+
+        double lhs = Math.log(h1)+Math.log(h2);
+        double rhs = 0;
+
+        double calcCost = (-1.0/2.0) * (lhs+rhs);
+        calcCost += ( (LAMBDA/(2.0*2.0)) * ((1.2*1.2) + (1.3*1.3)) );
+
+        assertEquals(cost,calcCost,EPSILON);
+
+        //TODO: test gradient
+
+    }
 
 
     @Test
@@ -432,7 +549,7 @@ public class TestSimpleDescent {
         add(independent,dependent,cntr,74.77589300092767,89.52981289513276,1);
     }
 
-    public double[][] getIndep2() {
+    public static double[][] getIndep2() {
         double[][] rawData = getData2();
         double[][] result = new double[rawData.length][2];
         for( int x=0;x<result.length;x++) {
@@ -440,7 +557,7 @@ public class TestSimpleDescent {
         }
         return( result );
     }
-    public double[] getDep2() {
+    public static double[] getDep2() {
         double[][] rawData = getData2();
         double[] result = new double[rawData.length];
         for( int x=0;x<result.length;x++) {
@@ -449,7 +566,7 @@ public class TestSimpleDescent {
         return( result );
     }
 
-    public double[][] getData2() {
+    public static double[][] getData2() {
         double[][] result = new double[][] {
         {0.051267,0.69956,1},
         {-0.092742,0.68494,1},
@@ -579,7 +696,7 @@ public class TestSimpleDescent {
      * @param input
      * @return
      */
-    public DoubleMatrix2D mapFeature(DoubleMatrix2D input){
+    public static DoubleMatrix2D mapFeature(DoubleMatrix2D input){
         DoubleMatrix2D result = new DenseDoubleMatrix2D(input.rows(),28);
         for( int z=0;z<input.rows();z++) {
             result.setQuick(z,0,1);
