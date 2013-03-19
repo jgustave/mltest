@@ -3,15 +3,18 @@ package com.jd.mltest;
 import cc.mallet.optimize.LimitedMemoryBFGS;
 import cc.mallet.optimize.Optimizable;
 import cc.mallet.optimize.Optimizer;
+import cc.mallet.util.MalletLogger;
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix1D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import org.junit.Test;
 
-import static com.jd.mltest.TestSimpleDescent.getDep2;
-import static com.jd.mltest.TestSimpleDescent.getIndep2;
-import static com.jd.mltest.TestSimpleDescent.mapFeature;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static com.jd.mltest.TestSimpleDescent.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Jumping ahead to using someone else's LBFGS routine...
@@ -23,26 +26,19 @@ public class TestMallet {
     @Test
     public void testMallet() {
         final double ALPHA          = .001;
+        final Double LAMBDA         = 0D;
 
 
         //rows,columns
         //Xi
         //These are the example data, i(down the column) is instance, j is each feature (across the row)
-
-        DoubleMatrix2D independent      = new DenseDoubleMatrix2D(getIndep2());
+        DoubleMatrix2D independent      = new DenseDoubleMatrix2D(getIndep(getFirstTestData(),true));
 
         //Yi
         //These are the results of the example linear equation.
-        DoubleMatrix1D dependent        = new DenseDoubleMatrix1D(getDep2());
+        DoubleMatrix1D dependent        = new DenseDoubleMatrix1D(getDep(getFirstTestData()));
 
-
-
-        //Add all sort so interacitons
-        independent = mapFeature(independent);
-
-        independent = independent.viewPart(0,0,independent.rows(),1 );
-
-        Glm glm = new Glm(independent,dependent,ALPHA,true, 1.0 );
+        Glm glm = new Glm(independent,dependent,ALPHA,true, LAMBDA );
 
         //For testing start at all 0.
         glm.getThetas().assign(0);
@@ -55,7 +51,122 @@ public class TestMallet {
 
         try {
             converged = optimizer.optimize();
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
+            System.out.println(e);
+            // This exception may be thrown if L-BFGS
+            //  cannot step in the current direction.
+            // This condition does not necessarily mean that
+            //  the optimizer has failed, but it doesn't want
+            //  to claim to have succeeded...
+        }
+
+        System.out.println("Converged:" + converged);
+        System.out.println("Cost:     " + glm.getCost());
+        System.out.println("Gradient: " + glm.getGradient());
+        System.out.println("Params:   " + glm.getThetas());
+
+        assertEquals(-25.16133356066622,glm.getThetas().get(0), EPSILON);
+        assertEquals(0.20623171324620174,glm.getThetas().get(1), EPSILON);
+        assertEquals(0.20147160039363188, glm.getThetas().get(2), EPSILON);
+
+        assertEquals(.7762906907271161,glm.predict(45,85), EPSILON);
+
+        //System.out.println(opt.getParameter(0) + ", " + opt.getParameter(1)  );
+    }
+
+    @Test
+    public void testMalletTwo() {
+        final double ALPHA          = .001;
+        final double LAMBDA         = 1.0;
+
+
+        //rows,columns
+        //Xi
+        //These are the example data, i(down the column) is instance, j is each feature (across the row)
+        DoubleMatrix2D independent      = new DenseDoubleMatrix2D(getIndep(getData2(),true));
+
+        //Yi
+        //These are the results of the example linear equation.
+        DoubleMatrix1D dependent        = new DenseDoubleMatrix1D(getDep(getData2()));
+
+
+
+        //Add all sort so interacitons
+        //independent = mapFeature(independent);
+
+        Glm glm = new Glm(independent,dependent,ALPHA,true, LAMBDA );
+
+        //For testing start at all 0.
+        glm.getThetas().assign(0);
+
+
+        Logistic  opt       = new Logistic(glm);
+        Optimizer optimizer = new LimitedMemoryBFGS(opt);
+
+        boolean converged = false;
+
+        try {
+            converged = optimizer.optimize();
+        } catch (Exception e) {
+            System.out.println(e);
+            // This exception may be thrown if L-BFGS
+            //  cannot step in the current direction.
+            // This condition does not necessarily mean that
+            //  the optimizer has failed, but it doesn't want
+            //  to claim to have succeeded...
+        }
+
+        System.out.println("Converged:" + converged);
+        System.out.println("Cost:     " + glm.getCost());
+        System.out.println("Gradient: " + glm.getGradient());
+        System.out.println("Params:   " + glm.getThetas());
+
+        //System.out.println(opt.getParameter(0) + ", " + opt.getParameter(1)  );
+    }
+
+
+    @Test
+    public void testMalletMicro() {
+        final double ALPHA          = .001;
+
+        Logger log = Logger.getLogger(LimitedMemoryBFGS.class.getName());
+        log.setLevel(Level.FINE);
+
+        MalletLogger.getLogger("").setLevel(Level.FINE);
+        MalletLogger.getLogger(LimitedMemoryBFGS.class.getName()).setLevel(Level.FINE);
+        MalletLogger.getLogger(LimitedMemoryBFGS.class.getName()).config(
+                "handlers = java.util.logging.ConsoleHandler\n" +
+                ".level = ALL\n" +
+                "\n" +
+                "\n" +
+                "# Console Logging\n" +
+                "java.util.logging.ConsoleHandler.level = ALL\n");
+        //rows,columns
+        //Xi
+        //These are the example data, i(down the column) is instance, j is each feature (across the row)
+
+        DoubleMatrix2D independent      = new DenseDoubleMatrix2D(new double[][]{{1.0}});
+
+        //Yi
+        //These are the results of the example linear equation.
+        DoubleMatrix1D dependent        = new DenseDoubleMatrix1D(new double[]{1.0});
+
+
+        Glm glm = new Glm(independent,dependent,ALPHA,true, 1.0 );
+
+        //For testing start at all 0.
+        glm.getThetas().assign(0);
+
+
+        Logistic  opt       = new Logistic(glm);
+        Optimizer optimizer = new LimitedMemoryBFGS(opt);
+
+
+        boolean converged = false;
+
+        try {
+            converged = optimizer.optimize();
+        } catch (Exception e) {
             System.out.println(e);
             // This exception may be thrown if L-BFGS
             //  cannot step in the current direction.
@@ -72,6 +183,8 @@ public class TestMallet {
 
         //System.out.println(opt.getParameter(0) + ", " + opt.getParameter(1)  );
     }
+
+
     public static class Logistic implements Optimizable.ByGradientValue {
 
 //        private final DoubleMatrix2D independent;
@@ -100,6 +213,9 @@ public class TestMallet {
                 throw new RuntimeException("size mismatch");
             }
             System.arraycopy(result, 0, gradient, 0, result.length );
+//            for( int x=0;x<gradient.length;x++) {
+//                gradient[x] = -gradient[x];
+//            }
         }
 
         @Override
@@ -107,17 +223,8 @@ public class TestMallet {
          * I assume this is cost fn
          */
         public double getValue () {
-
-            //regterm = (Lambda/2M) SUM( Theta^2 )
-
-            //( (-1/m) * SUM( (Y * log(h)) + ((1-Y)*log(1-h))  ) + regterm
-
-//            double regterm  = glm.getRegularizationValue();
-//            double norm     = (-1.0 / glm.getNumInstances() );
-//
-//
-//
             return glm.getCost();
+            //return -glm.getCost();
         }
 
         @Override

@@ -283,8 +283,8 @@ public class Glm {
             if( isRegularized() ) {
                 double regularize = 0;
                 //(Lambda/(2m))* sum(theta^2)
-                //But sum is from 1 to N.. Skip intercept
-                for( int x=1;x<thetas.size();x++) {
+                //But sum is from 1 to N.. Skip intercept?
+                for( int x=0;x<thetas.size();x++) {
                     regularize += ( thetas.getQuick(x) * thetas.getQuick(x) );
                 }
                 regularize *= (lambda/(2*getNumInstances()));
@@ -313,20 +313,21 @@ public class Glm {
         calcHypothesisError();
 
         if( isLogistic ) {
+            //For Regularized LR, the first term (intercept) is not regularized.
+
+            //delta is in hypothesis after calcHypothesisError()
+
+            //delta = (1/m) * SUM( delta * xj )
+
+            // deltas matrix becomes SUM( delta * xj )
+            SeqBlas.seqBlas.dgemv(true,1.0,independent,hypothesies,0,deltas);
+
+            //scale by (1/m)
+            deltas.assign(Functions.mult(1.0/(double)getNumInstances()));
+
             if( isRegularized() ) {
 
                 //For Regularized LR, the first term (intercept) is not regularized.
-
-                //delta is in hypothesis after calcHypothesisError()
-
-                //delta = (1/m) * SUM( delta * xj )
-
-                // deltas matrix becomes SUM( delta * xj )
-                SeqBlas.seqBlas.dgemv(true,1.0,independent,hypothesies,0,deltas);
-
-                //scale by (1/m)
-                deltas.assign(Functions.mult(1.0/(double)getNumInstances()));
-
                 //Skip the intercept, and add regularization to all others.
                 double regularScale = lambda / (double)getNumInstances();
                 for( int x=1;x<deltas.size();x++) {
@@ -334,14 +335,12 @@ public class Glm {
                     double adjust = regularScale*thetas.getQuick(x);
                     deltas.setQuick(x, deltas.getQuick(x) + adjust);
                 }
-
-                return( deltas );
-            }else {
-                return( null );
             }
-        }else {
-            return( null );
+
+            return( deltas );
         }
+
+        return( null );
     }
 
     /**
