@@ -44,8 +44,9 @@ public class TestMallet {
         glm.getThetas().assign(0);
 
 
-        Logistic  opt       = new Logistic(glm);
-        Optimizer optimizer = new LimitedMemoryBFGS(opt);
+        Logistic            opt       = new Logistic(glm);
+        LimitedMemoryBFGS   optimizer = new LimitedMemoryBFGS(opt);
+
 
         boolean converged = false;
 
@@ -92,7 +93,7 @@ public class TestMallet {
 
 
         //Add all sort so interacitons
-        //independent = mapFeature(independent);
+        independent = mapFeature(independent);
 
         Glm glm = new Glm(independent,dependent,ALPHA,true, LAMBDA );
 
@@ -101,7 +102,9 @@ public class TestMallet {
 
 
         Logistic  opt       = new Logistic(glm);
-        Optimizer optimizer = new LimitedMemoryBFGS(opt);
+        LimitedMemoryBFGS   optimizer = new LimitedMemoryBFGS(opt);
+        optimizer.setTolerance(.00000000001);
+
 
         boolean converged = false;
 

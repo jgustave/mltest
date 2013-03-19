@@ -142,6 +142,12 @@ public class TestSimpleDescent {
             }
         }
 
+
+        System.out.println("Cost:     " + glm.getCost());
+        System.out.println("Gradient: " + glm.getGradient());
+        System.out.println("Theta:    " + glm.getThetas());
+
+
         //It seems like if we don't regularize to Zero mean, then the learning rate has to go way up or it goes off the
         //rails real quick.
 
@@ -246,10 +252,16 @@ public class TestSimpleDescent {
             //thetas = logisticDescent( ALPHA, thetas, independent, dependent );
             glm.step();
             if( x%PRINT_AT == 0) {
-                System.out.println(glm.getThetas());
-                System.out.println(glm.getCost());
+                System.out.println("Cost:     " + glm.getCost());
+                System.out.println("Gradient: " + glm.getGradient());
+                System.out.println("Theta:    " + glm.getThetas());
             }
         }
+
+        System.out.println("Cost:     " + glm.getCost());
+        System.out.println("Gradient: " + glm.getGradient());
+        System.out.println("Theta:    " + glm.getThetas());
+
 
         //From Test Coursera test data:
         assertEquals(.693, glm.getCost(), EPSILON );
@@ -311,9 +323,6 @@ public class TestSimpleDescent {
         calcCost += ( (LAMBDA/(2.0*2.0)) * ((1.1*1.1)+  (1.2*1.2) + (1.3*1.3)) );
 
         assertEquals(cost,calcCost,EPSILON);
-
-
-        //TODO: test gradient
 
         double diff0 = ((h1-1.0)*1.0) + ((h2-0.0)*1.0);
         double diff1 = ((h1-1.0)*1.5) + ((h2-0.0)*0.3);
