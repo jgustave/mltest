@@ -15,7 +15,6 @@ import static org.junit.Assert.assertEquals;
 /**
  *https://github.com/mkobos/lbfgsb_wrapper
 
-
  install gfortran
  http://hpc.sourceforge.net
  http://sourceforge.net/projects/hpc/files/hpc/g95/gfortran-mlion.tar.gz
@@ -31,7 +30,7 @@ import static org.junit.Assert.assertEquals;
  jni.h lives in:
  /System/Library/Frameworks/JavaVM.framework/Headers
 
- ln -s /System/Library/Frameworks/JavaVM.framework/Headers include
+ ln -s /System/Library/Frameworks/JavaVM.framework/Headers /Library/Java/Home/include
 
  go to the /dist dir
  cp liblbfgsb_wrapper.so liblbfgsb_wrapper.dylib
