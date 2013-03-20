@@ -121,7 +121,7 @@ public class TestLbfgs {
             System.out.println("Gradient: " + glm.getGradient());
             System.out.println("Params:   " + glm.getThetas());
             assertTrue(IterationsInfo.StopType.ABNORMAL != result.iterationsInfo.type);
-            
+
         } catch (LBFGSBException e) {
             e.printStackTrace();
         }
@@ -141,15 +141,11 @@ public class TestLbfgs {
         public FunctionValues getValues(double[] point){
 
             for( int x=0;x<point.length;x++) {
-                glm.getThetas().set(x,point[x]);
+                glm.getThetas().setQuick(x,point[x]);
             }
             double   cost     = glm.getCost();
             double[] gradient = glm.getGradient().toArray();
 
-//            cost = -cost;
-//            for( int x=0;x<gradient.length;x++) {
-//                gradient[x] = -gradient[x];
-//            }
             FunctionValues vals =  new FunctionValues(cost, gradient);
             return( vals );
         }
