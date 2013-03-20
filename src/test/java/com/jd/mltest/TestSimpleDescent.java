@@ -346,6 +346,81 @@ public class TestSimpleDescent {
     /**
      * Test Cost and Gradient by hand
      */
+    public void testRegLogisticCalcsThree() {
+        //2 params (plus Int), 2 instances.
+        //Lets verify by hand what these funcs should be
+
+        DoubleMatrix2D independent      = new DenseDoubleMatrix2D(new double[][]{{1.0,1.5,0.2},
+                                                                                 {1.0,0.3,0.4},
+                                                                                 {0.1,0.2,0.3},
+                                                                                 {0.4,0.5,0.6}});
+
+        //Yi
+        //These are the results of the example linear equation.
+        DoubleMatrix1D dependent        = new DenseDoubleMatrix1D(new double[]{1.0,0.0,1.0,0.0});
+
+
+        double ALPHA  = 0.1;
+        double LAMBDA = 0.5;
+        double M      = dependent.size();
+
+        Glm glm = new Glm( independent, dependent, ALPHA, true, LAMBDA );
+
+        glm.getThetas().set(0,1.1);
+        glm.getThetas().set(1,1.2);
+        glm.getThetas().set(2,1.3);
+
+        double cost         = glm.getCost();
+        double[] gradient   = glm.getGradient().toArray();
+
+        //COST = ( (-1/m) * SUM( (Y * log(h))  +  ((1-Y)*log(1-h)) ) ) )   +  lambda/(2m) * Sum(theta^2)
+
+
+        double h1 = 1.0*1.1 + 1.5*1.2 + .2*1.3;
+        double h2 = 1.0*1.1 + .3*1.2  + .4*1.3;
+        double h3 = .1*1.1 + .2*1.2 + .3*1.3;
+        double h4 = .4*1.1 + .5*1.2  + .6*1.3;
+
+
+        h1 = Glm.logit(h1); //lhs
+        h2 = Glm.logit(h2); //rhs
+        h3 = Glm.logit(h3); //lhs
+        h4 = Glm.logit(h4); //rhs
+
+
+        double lhs = Math.log(h1)+Math.log(h3);
+        double rhs = Math.log(1.0-h2)+Math.log(1.0-h4);
+
+        double calcCost = (-1.0/M) * (lhs+rhs);
+        calcCost += ( (LAMBDA/(2.0*M)) * ((1.1*1.1)+  (1.2*1.2) + (1.3*1.3)) );
+
+        assertEquals(cost,calcCost,EPSILON);
+
+        //gradientj = (1/m)*SUM( diff(i) * x(i)j )
+        //j=0
+        double diff0 = ((h1-1.0)*1.0) + ((h2-0.0)*1.0) + ((h3-1.0)*.1) + ((h4-0.0)*.4);
+        //j=1
+        double diff1 = ((h1-1.0)*1.5) + ((h2-0.0)*0.3) + ((h3-1.0)*.2) + ((h4-0.0)*.5);
+        //j=2
+        double diff2 = ((h1-1.0)*0.2) + ((h2-0.0)*0.4) + ((h3-1.0)*.3) + ((h4-0.0)*.6);
+
+        diff0 = diff0 * (1.0/M);
+        diff1 = diff1 * (1.0/M);
+        diff2 = diff2 * (1.0/M);
+
+        diff1 += (LAMBDA / M) * 1.2;
+        diff2 += (LAMBDA / M) * 1.3;
+
+
+        assertEquals(diff0,gradient[0],EPSILON);
+        assertEquals(diff1,gradient[1],EPSILON);
+        assertEquals(diff2,gradient[2],EPSILON);
+
+    }
+    @Test
+    /**
+     * Test Cost and Gradient by hand
+     */
     public void testRegLogisticCalcsTwo() {
         //2 params (plus Int), 2 instances.
         //Lets verify by hand what these funcs should be
@@ -388,7 +463,26 @@ public class TestSimpleDescent {
 
         assertEquals(cost,calcCost,EPSILON);
 
-        //TODO: test gradient
+        //gradientj = (1/m)*SUM( diff(i) * x(i)j )
+
+        //Sum diff (i) * x(j),  per j
+        double diff0 = ((h1-1.0)*1.0) + ((h2-1.0)*1.0);
+        double diff1 = ((h1-1.0)*1.5) + ((h2-1.0)*0.3);
+        double diff2 = ((h1-1.0)*0.2) + ((h2-1.0)*0.4);
+
+        //1/m
+        diff0 = diff0 * (1.0/2.0);
+        diff1 = diff1 * (1.0/2.0);
+        diff2 = diff2 * (1.0/2.0);
+
+        //regularize
+        diff1 += (LAMBDA / 2.0) * 1.2;
+        diff2 += (LAMBDA / 2.0) * 1.3;
+
+
+        assertEquals(diff0,gradient[0],EPSILON);
+        assertEquals(diff1,gradient[1],EPSILON);
+        assertEquals(diff2,gradient[2],EPSILON);
 
     }
 
