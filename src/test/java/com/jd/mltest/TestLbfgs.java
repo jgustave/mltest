@@ -39,7 +39,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class TestLbfgs {
     public static final double EPSILON = 0.0001;
-    
+
     @Test
     public void testLbfgs() {
         //ADD -Djava.library.path=/Users/jerdavis/Dropbox/devhome/mltest/lib
