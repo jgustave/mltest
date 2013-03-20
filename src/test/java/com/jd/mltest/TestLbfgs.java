@@ -7,10 +7,9 @@ import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import lbfgsb.*;
 import org.junit.Test;
 
-import static com.jd.mltest.TestSimpleDescent.getDep;
-import static com.jd.mltest.TestSimpleDescent.getFirstTestData;
-import static com.jd.mltest.TestSimpleDescent.getIndep;
+import static com.jd.mltest.TestSimpleDescent.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  *https://github.com/mkobos/lbfgsb_wrapper
@@ -83,6 +82,46 @@ public class TestLbfgs {
             assertEquals(.7762906907271161,glm.predict(45,85), EPSILON);
 
 
+        } catch (LBFGSBException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testFooTwo() {
+        try
+        {
+            final double ALPHA          = .001;
+            final Double LAMBDA         = 1D;
+
+
+            //rows,columns
+            //Xi
+            //These are the example data, i(down the column) is instance, j is each feature (across the row)
+            DoubleMatrix2D independent      = new DenseDoubleMatrix2D(getIndep(getData2(),true));
+
+            //Yi
+            //These are the results of the example linear equation.
+            DoubleMatrix1D dependent        = new DenseDoubleMatrix1D(getDep(getData2()));
+
+            Glm glm = new Glm(independent,dependent,ALPHA,true, LAMBDA );
+
+            //For testing start at all 0.
+            glm.getThetas().assign(0);
+
+            Minimizer alg = new Minimizer();
+            alg.setNoBounds(glm.getNumParameters());
+
+
+            GlmFunc glmFunc = new GlmFunc(glm);
+            Result  result  = alg.run(glmFunc, glm.getThetas().toArray() );
+
+            System.out.println("The final result: "+result);
+            System.out.println("Cost:     " + glm.getCost());
+            System.out.println("Gradient: " + glm.getGradient());
+            System.out.println("Params:   " + glm.getThetas());
+            assertTrue(IterationsInfo.StopType.ABNORMAL != result.iterationsInfo.type);
+            
         } catch (LBFGSBException e) {
             e.printStackTrace();
         }
