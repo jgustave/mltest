@@ -41,6 +41,9 @@ public class TestLbfgs {
     public static final double EPSILON = 0.0001;
 
     @Test
+    /**
+     * -Djava.library.path=/Users/jerdavis/Dropbox/devhome/mltest/lib
+     */
     public void testOpt1() {
         try
         {

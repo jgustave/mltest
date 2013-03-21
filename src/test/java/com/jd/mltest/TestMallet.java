@@ -139,7 +139,7 @@ public class TestMallet {
         LimitedMemoryBFGS   optimizer = new LimitedMemoryBFGS(opt);
         optimizer.setTolerance(.000000000000001);
 
-        
+
 
 
         boolean converged = false;
