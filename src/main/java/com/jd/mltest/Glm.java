@@ -55,7 +55,7 @@ public class Glm {
 
     //learning rate
     @SuppressWarnings ({"FieldCanBeLocal", "UnusedDeclaration"})
-    private final double         alpha;
+    private       double         alpha;
 
     //alpha * (1/m) in one or just alpha.
     private final double         modifier;
@@ -119,6 +119,14 @@ public class Glm {
         }
 
         calculateStats();
+    }
+
+    public void setAlpha (double alpha) {
+        this.alpha = alpha;
+    }
+
+    public double getAlpha () {
+        return alpha;
     }
 
     public boolean isRegularized() {

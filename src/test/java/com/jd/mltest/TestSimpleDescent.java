@@ -161,6 +161,75 @@ public class TestSimpleDescent {
 
 
     @Test
+    public void testLogisticDescentMultipleTwo() {
+        final double ALPHA          = .01;
+        final int    NUM_ITERATIONS = 100000000;
+        final long   PRINT_AT       = 1000000;
+
+        //rows,columns
+        //Xi
+        //These are the example data, i(down the column) is instance, j is each feature (across the row)
+        DoubleMatrix2D independent      = new DenseDoubleMatrix2D(getIndep(getData2(),true));
+        //independent = mapFeature(independent);
+        //Yi
+        //These are the results of the example linear equation.
+        DoubleMatrix1D dependent        = new DenseDoubleMatrix1D(getDep(getData2()));
+
+        Glm glm = new Glm(independent,dependent,ALPHA,true, null);
+
+        long x =0;
+        while(true){//for( int x=0;x<NUM_ITERATIONS;x++) {
+            //thetas = logisticDescent( ALPHA, thetas, independent, dependent );
+            glm.step();
+
+            long test = x/PRINT_AT;
+            if( x%PRINT_AT == 0) {
+                System.out.println("TEST:     " + test + " " + glm.getAlpha() );
+                System.out.println("Cost:     " + glm.getCost());
+                System.out.println("Gradient: " + glm.getGradient());
+                System.out.println("Theta:    " + Arrays.toString(glm.getThetas().toArray()));
+            }
+
+            if( test > 40 ) {
+                glm.setAlpha(.00000000001);
+            }else if( test > 20 ) {
+                glm.setAlpha(.000000001);
+            }else if(test > 10 ) {
+                glm.setAlpha(.000001);
+            }else if(test > 5 ) {
+                glm.setAlpha(.00001);
+            }else if(test > 2 ) {
+                glm.setAlpha(.0001);
+            }
+
+//            if( test < 2 ) {
+//                glm.setAlpha(.001);
+//            } else if( test < 10 ) {
+//                glm.setAlpha(.0001);
+//            }else if( test < 20 ) {
+//                glm.setAlpha(.00001);
+//            }else if( test < 40 ) {
+//                glm.setAlpha(.000001);
+//            }else {
+//                glm.setAlpha(.00000001);
+//            }
+            x++;
+        }
+
+
+//        System.out.println("Cost:     " + glm.getCost());
+//        System.out.println("Gradient: " + glm.getGradient());
+//        System.out.println("Theta:    " + glm.getThetas());
+
+//        Gradient: 1 x 3 matrix
+//        6.849512E-016 -2.352073E-014 -1.469634E-015
+//        Theta:    1 x 3 matrix
+//        -0.014184 -0.303521 -0.018132
+//        Cost:     0.6902411220169706
+
+    }
+
+    @Test
     /**
      * Now we have feature scaled and get the same results.
      */

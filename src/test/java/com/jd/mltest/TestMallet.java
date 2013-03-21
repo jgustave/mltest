@@ -2,6 +2,8 @@ package com.jd.mltest;
 
 import cc.mallet.optimize.LimitedMemoryBFGS;
 import cc.mallet.optimize.Optimizable;
+
+import cc.mallet.optimize.tests.TestOptimizable;
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix1D;
@@ -9,8 +11,12 @@ import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import org.junit.Test;
 
 
+import java.util.Arrays;
+import java.util.Random;
+
 import static com.jd.mltest.TestSimpleDescent.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Jumping ahead to using someone else's LBFGS routine...
@@ -43,6 +49,7 @@ public class TestMallet {
         Logistic            opt       = new Logistic(glm);
         LimitedMemoryBFGS   optimizer = new LimitedMemoryBFGS(opt);
 
+        //TestOptimizable.testGetSetParameters( opt );
 
         boolean converged = false;
 
@@ -72,9 +79,40 @@ public class TestMallet {
     }
 
     @Test
+    public void testMalletUnit() {
+        final double ALPHA          = .001;
+        final Double LAMBDA         = 0D;
+
+
+        //rows,columns
+        //Xi
+        //These are the example data, i(down the column) is instance, j is each feature (across the row)
+        DoubleMatrix2D independent      = new DenseDoubleMatrix2D(getIndep(getFirstTestData(),true));
+
+        //Yi
+        //These are the results of the example linear equation.
+        DoubleMatrix1D dependent        = new DenseDoubleMatrix1D(getDep(getFirstTestData()));
+
+        Glm glm = new Glm(independent,dependent,ALPHA,true, LAMBDA );
+
+        //For testing start at all 0.
+        glm.getThetas().assign(0);
+
+
+        Logistic            opt       = new Logistic(glm);
+        //LimitedMemoryBFGS   optimizer = new LimitedMemoryBFGS(opt);
+
+        assertTrue(TestOptimizable.testGetSetParameters(opt));
+        assertTrue(TestOptimizable.testValueAndGradient(opt));
+        assertTrue(TestOptimizable.testValueAndGradientRandomParameters(opt, new Random()));
+
+
+    }
+
+    @Test
     public void testMalletTwo() {
         final double ALPHA          = .001;
-        final double LAMBDA         = 1.0;
+        final double LAMBDA         = 0.0;
 
 
         //rows,columns
@@ -89,7 +127,7 @@ public class TestMallet {
 
 
         //Add all sort so interacitons
-        independent = mapFeature(independent);
+        //independent = mapFeature(independent);
 
         Glm glm = new Glm(independent,dependent,ALPHA,true, LAMBDA );
 
@@ -99,7 +137,9 @@ public class TestMallet {
 
         Logistic  opt       = new Logistic(glm);
         LimitedMemoryBFGS   optimizer = new LimitedMemoryBFGS(opt);
-        optimizer.setTolerance(.00000000001);
+        optimizer.setTolerance(.000000000000001);
+
+        
 
 
         boolean converged = false;
@@ -118,8 +158,27 @@ public class TestMallet {
         System.out.println("Converged:" + converged);
         System.out.println("Cost:     " + glm.getCost());
         System.out.println("Gradient: " + glm.getGradient());
-        System.out.println("Params:   " + glm.getThetas());
+        System.out.println("Params:   " + Arrays.toString(glm.getThetas().toArray()));
 
+
+//Cost:     0.609940054943988
+//Gradient: 1 x 28 matrix
+//0.000577 0.001266 0.00033 0.001266 0.00033 0.000555 0.001266 0.00033 0.000555 0.000347 0.001266 0.00033 0.000555 0.000347 0.000466 0.001266 0.00033 0.000555 0.000347 0.000466 0.000367 0.001266 0.00033 0.000555 0.000347 0.000466 0.000367 0.000375
+//Params:   1 x 28 matrix
+//0.214821 0.081307 0.017729 0.081307 0.017729 -0.481613 0.081307 0.017729 -0.481613 0.170024 0.081307 0.017729 -0.481613 0.170024 -0.565344 0.081307 0.017729 -0.481613 0.170024 -0.565344 -0.078423 0.081307 0.017729 -0.481613 0.170024 -0.565344 -0.078423 -0.492659
+
+//No Reg.
+//        Cost:     0.5756399307111906
+//        Gradient: 1 x 28 matrix
+//        0.000121 0.000121 0.000155 0.000121 0.000155 4.230738E-005 0.000121 0.000155 4.230738E-005 -3.664739E-005 0.000121 0.000155 4.230738E-005 -3.664739E-005 -0.000217 0.000121 0.000155 4.230738E-005 -3.664739E-005 -0.000217 0.000278 0.000121 0.000155 4.230738E-005 -3.664739E-005 -0.000217 0.000278 6.66527E-005
+//        Params:   1 x 28 matrix
+//        0.058781 0.058781 -0.292555 0.058781 -0.292555 0.581333 0.058781 -0.292555 0.581333 2.095154 0.058781 -0.292555 0.581333 2.095154 -3.997081 0.058781 -0.292555 0.581333 2.095154 -3.997081 -1.232733 0.058781 -0.292555 0.581333 2.095154 -3.997081 -1.232733 -4.8656
+
+//        Cost:     0.6902412268833071
+//        Gradient: 1 x 3 matrix
+//        0.000117 -4.615523E-005 0.000114
+//        Params:   1 x 3 matrix
+//        -0.013915 -0.304199 -0.016838
         //System.out.println(opt.getParameter(0) + ", " + opt.getParameter(1)  );
     }
 
@@ -138,6 +197,9 @@ public class TestMallet {
         public void getValueGradient (double[] gradient) {
             double[] result = glm.getGradient().toArray();
             System.arraycopy(result, 0, gradient, 0, result.length );
+            for( int x=0;x<result.length;x++) {
+                gradient[x] = -gradient[x];
+            }
         }
 
         @Override
@@ -145,7 +207,8 @@ public class TestMallet {
          * I assume this is cost fn
          */
         public double getValue () {
-            return glm.getCost();
+            //return glm.getCost();
+            return -glm.getCost();
         }
 
         @Override
