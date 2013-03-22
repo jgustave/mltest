@@ -112,10 +112,6 @@ public class TestSimpleDescent {
 
     @Test
     public void testLogisticDescentMultiple() {
-        //Cost function: -y * log(h(x)) - (1-y)log(1-h(x))
-        //(-1/m) Sum(Cost)
-//        final int    NUM_EXAMPLES   = 100; //M
-//        final int    NUM_PARAMS     = 2; //N
         final double ALPHA          = .00001;
         final int    NUM_ITERATIONS = 100000000;
         final int    PRINT_AT       = 1000000;
