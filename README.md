@@ -9,8 +9,10 @@ the my linear algebra library.
 I'm going to now use Mallet to implement the same using gradient and cost functions and L-BFGS...
 and finally finishing on Neural Nets.
 
-3/22/12  Success this week getting LBFGS working. Mallet seems to be maximizing, so I had to flip the signs. LBFGS-B (some fortran code)
+3/22/13  Success this week getting LBFGS working. Mallet seems to be maximizing, so I had to flip the signs. LBFGS-B (some fortran code)
 Seems to be performing the best. No strange errors, minimizes by default, and it converges to an answer much closer to
  a super fine gradient descent.. So Mucho Success! I think next week I will start focusing on getting a NN to work
  using LBFGS-B.  Finally starting to be able to read all those Summations, etc. Lets see how I do when it's a Tripple Sum! :)
- 
+
+3/26/13 Add MiniBatch to the list: http://www.reddit.com/r/MachineLearning/comments/1aycy1/i_cant_get_minibatch_gradient_descent_to_work/
+And since this has become a blog of sorts.. Here is Another ultimate goal: Asynchronous gradient descent [http://ai.stanford.edu/~quocle/]
