@@ -10,6 +10,7 @@ import cern.colt.matrix.linalg.SeqBlas;
 import cern.jet.math.Functions;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
+import java.util.Arrays;
 import java.util.Random;
 
 /**
@@ -76,7 +77,10 @@ public class GlmLess {
      * @param alpha
      * @param isLogistic
      */
-    public GlmLess (DoubleMatrix2D independent, DoubleMatrix1D dependent, double alpha, boolean isLogistic,
+    public GlmLess (DoubleMatrix2D independent,
+                    DoubleMatrix1D dependent,
+                    double alpha,
+                    boolean isLogistic,
                     Double lambda) {
 
 
@@ -87,7 +91,7 @@ public class GlmLess {
         this.independent            = independent;
         this.dependent              = dependent;
 
-        this.thetas                 = new DenseDoubleMatrix1D(independent.columns());
+        this.thetas                 = new DenseDoubleMatrix1D(independent.columns() + 1);
         this.hypothesies            = new DenseDoubleMatrix1D(dependent.size());
 
         this.deltas                 = new DenseDoubleMatrix1D(thetas.size());
@@ -379,6 +383,7 @@ public class GlmLess {
         //TODO: once we get it working up to here.. we can drop the hypothesis matrix as well.. and getGradient in one step
         //hypothesis matrix is set to (h-y)
         calcHypothesisError();
+        System.out.println("H:" + Arrays.toString(hypothesies.toArray()));
 
         if( isLogistic ) {
             //For Regularized LR, the first term (intercept) is not regularized.
@@ -387,24 +392,38 @@ public class GlmLess {
 
             //delta = (1/m) * SUM( delta * xj )
 
-            // deltas matrix becomes SUM( delta * xj )
-            SeqBlas.seqBlas.dgemv(true,1.0,independent,hypothesies,0,deltas);
-
-            //scale by (1/m)
-            deltas.assign(Functions.mult(1.0/(double)getNumInstances()));
-
-            if( isRegularized() ) {
-
-                //For Regularized LR, the first term (intercept) is not regularized.
-                //Skip the intercept, and add regularization to all others.
-                double regularScale = lambda / (double)getNumInstances();
-                for( int x=1;x<deltas.size();x++) {
-                    //add (lambda/m)*thetaj
-                    double adjust = regularScale*thetas.getQuick(x);
-                    deltas.setQuick(x, deltas.getQuick(x) + adjust);
+            double[] foo = new double[deltas.size()];
+            for( int x=0;x<getNumInstances();x++) {
+                double error = hypothesies.getQuick(x);
+                foo[0] += error;
+                for( int y=1;y<foo.length;y++) {
+                    foo[y] += (error * independent.get(x,y-1) );
                 }
             }
 
+            //scale by (1/m)
+            for( int x=0;x<deltas.size();x++) {
+                foo[x] *= 1.0 / (double)getNumInstances();
+            }
+
+            deltas.assign(foo);
+
+            System.out.println("d:" + Arrays.toString(deltas.toArray()));
+            //deltas.assign(Functions.mult(1.0/(double)getNumInstances()));
+
+//            if( isRegularized() ) {
+//
+//                //For Regularized LR, the first term (intercept) is not regularized.
+//                //Skip the intercept, and add regularization to all others.
+//                double regularScale = lambda / (double)getNumInstances();
+//                for( int x=1;x<deltas.size();x++) {
+//                    //add (lambda/m)*thetaj
+//                    double adjust = regularScale*thetas.getQuick(x);
+//                    deltas.setQuick(x, deltas.getQuick(x) + adjust);
+//                }
+//            }
+
+            System.out.println("D:" + Arrays.toString(deltas.toArray()));
             return( deltas );
         }
 
@@ -504,6 +523,7 @@ public class GlmLess {
                 isGradientStale = false;
             }
             System.arraycopy(cachedGradient, 0, outputGradient, 0, cachedGradient.length);
+            System.out.println("g:"+ Arrays.toString(outputGradient));
         }
 
         @Override
@@ -516,6 +536,7 @@ public class GlmLess {
                 cachedVal = -glm.getCost();
                 isValStale = false;
             }
+            System.out.println("v:"+cachedVal);
             return (cachedVal);
         }
 

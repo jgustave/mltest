@@ -173,6 +173,94 @@ public class TestMallet {
 
 
     @Test
+    public void testSimple() {
+        final double ALPHA          = .001;
+        //double[]   response     = new double[] {0,  0, 0,1,0,1,1, 1 };
+        double[]   response     = new double[] {0,  0, 0,1,0,1,1, 1 };
+        //without intercept
+        double[][] p1           = new double[][] {{0.1, .4},
+                                                  {1,   .5},
+                                                  {3,   .4},
+                                                  {4,   .3},
+                                                  {5,   .2},
+                                                  {7,   1},
+                                                  {8,   .1},
+                                                  {10,  .1},
+        };
+        //With intercept
+        double[][] p2           = new double[][] {{1,0.1,.4 },
+                                                  {1,1,  .5   },
+                                                  {1,3,  .4},
+                                                  {1,4,  .3},
+                                                  {1,5,  .2},
+                                                  {1,7,  1},
+                                                  {1,8,  .1},
+                                                  {1,10, .1},
+        };
+
+        //rows,columns
+        //Xi
+        //These are the example data, i(down the column) is instance, j is each feature (across the row)
+        DoubleMatrix2D independent      = new DenseDoubleMatrix2D(p2);
+
+        //Yi
+        //These are the results of the example linear equation.
+        DoubleMatrix1D dependent        = new DenseDoubleMatrix1D(response);
+
+
+
+        //Add all sort so interacitons
+        //independent = mapFeature(independent);
+
+        Glm     glm     = new Glm(new DenseDoubleMatrix2D(p2),
+                                  dependent,ALPHA,true, null );
+        GlmLess glmLess = new GlmLess(new DenseDoubleMatrix2D(p1),
+                                      dependent,ALPHA,true, null );
+
+        //For testing start at all 0.
+        glm.getThetas().assign(0);
+        glmLess.getThetas().assign(0);
+
+        Logistic            opt       = new Logistic(glm);
+        LimitedMemoryBFGS   optimizer = new LimitedMemoryBFGS(opt);
+        optimizer.setTolerance(.000001);
+
+
+        boolean converged = false;
+
+        try {
+            converged = optimizer.optimize();
+        } catch (Exception e) {
+            System.out.println(e);
+            // This exception may be thrown if L-BFGS
+            //  cannot step in the current direction.
+            // This condition does not necessarily mean that
+            //  the optimizer has failed, but it doesn't want
+            //  to claim to have succeeded...
+        }
+
+        System.out.println("###############################################################");
+        System.out.println("###############################################################");
+        System.out.println("###############################################################");
+        boolean conv = glmLess.solve();
+
+
+        System.out.println("Converged:" + converged);
+        System.out.println("Cost:     " + glm.getCost());
+        System.out.println("Gradient: " + glm.getGradient());
+        System.out.println("Params:   " + Arrays.toString(glm.getThetas().toArray()));
+        System.out.println("Params:   " + Arrays.toString(glmLess.getThetas().toArray()));
+
+
+        assertEquals(glmLess.getThetas().toArray()[0],glm.getThetas().toArray()[0],EPSILON);
+        assertEquals(glmLess.getThetas().toArray()[1],glm.getThetas().toArray()[1],EPSILON);
+        assertEquals(glmLess.getThetas().toArray()[2],glm.getThetas().toArray()[2],EPSILON);
+
+    }
+
+
+
+    @Test
     public void testMalletBig() {
 
         //39 seconds
@@ -285,6 +373,7 @@ public class TestMallet {
                 isGradientStale = false;
             }
             System.arraycopy(cachedGradient, 0, outputGradient, 0, cachedGradient.length);
+            System.out.println("g:"+Arrays.toString(outputGradient));
         }
 
         @Override
@@ -297,6 +386,7 @@ public class TestMallet {
                 cachedVal = -glm.getCost();
                 isValStale = false;
             }
+            System.out.println("v:"+cachedVal);
             return (cachedVal);
         }
 

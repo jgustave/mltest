@@ -9,6 +9,7 @@ import cern.colt.matrix.linalg.SeqBlas;
 import cern.jet.math.Functions;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
+import java.util.Arrays;
 import java.util.Random;
 
 /**
@@ -333,6 +334,7 @@ public class Glm {
 
         //hypothesis matrix is set to (h-y)
         calcHypothesisError();
+        System.out.println("H:" + Arrays.toString(hypothesies.toArray()));
 
         if( isLogistic ) {
             //For Regularized LR, the first term (intercept) is not regularized.
@@ -344,7 +346,16 @@ public class Glm {
             // deltas matrix becomes SUM( delta * xj )
             SeqBlas.seqBlas.dgemv(true,1.0,independent,hypothesies,0,deltas);
 
+            double[] foo = new double[3];
+            for( int x=0;x<getNumInstances();x++) {
+                double error = hypothesies.getQuick(x);
+                for( int y=0;y<foo.length;y++) {
+                    foo[y] += (error * independent.get(x,y) );
+                }
+            }
+
             //scale by (1/m)
+            System.out.println("d:" + Arrays.toString(deltas.toArray()));
             deltas.assign(Functions.mult(1.0/(double)getNumInstances()));
 
             if( isRegularized() ) {
@@ -359,6 +370,7 @@ public class Glm {
                 }
             }
 
+            System.out.println("D:" + Arrays.toString(deltas.toArray()));
             return( deltas );
         }
 
