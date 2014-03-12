@@ -16,3 +16,5 @@ Seems to be performing the best. No strange errors, minimizes by default, and it
 
 3/26/13 Add MiniBatch to the list: http://www.reddit.com/r/MachineLearning/comments/1aycy1/i_cant_get_minibatch_gradient_descent_to_work/
 And since this has become a blog of sorts.. Here is Another ultimate goal: Asynchronous gradient descent [http://ai.stanford.edu/~quocle/]
+
+12/9/13 9 months and this project has long since fallen off the list of things I have time for. Maybe more time soon. :)
