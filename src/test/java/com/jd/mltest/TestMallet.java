@@ -344,6 +344,62 @@ public class TestMallet {
 //        assertEquals(-0.0168,glm.getThetas().toArray()[2],BIG_EPSILON);
     }
 
+    @Test
+    public void testMalletBigLess() {
+
+
+        final double ALPHA          = .0001;
+        final double LAMBDA         = 0.0;
+
+
+        final int NUM_SAMPLES = 15000000;
+        double[][] bigInd = new double[NUM_SAMPLES][1];
+        double[] bigDep   = new double[NUM_SAMPLES];
+        Random rand = new Random();
+        for( int x=0;x<NUM_SAMPLES;x++) {
+            boolean isResp = rand.nextBoolean();
+            bigDep[x] = isResp?1:0;
+            bigInd[x][0] = isResp?(10+rand.nextDouble()):rand.nextDouble();
+        }
+        //rows,columns
+        //Xi
+        //These are the example data, i(down the column) is instance, j is each feature (across the row)
+        DoubleMatrix2D independent      = new DenseDoubleMatrix2D(bigInd);
+
+        //Yi
+        //These are the results of the example linear equation.
+        DoubleMatrix1D dependent        = new DenseDoubleMatrix1D(bigDep);
+        //independent = mapFeature(independent);
+        bigInd = null;
+        bigDep = null;
+
+
+
+        //Add all sort so interacitons
+        //independent = mapFeature(independent);
+        System.out.println("Go");
+        long start = System.nanoTime();
+        GlmLess glm = new GlmLess(independent,dependent,ALPHA,true, LAMBDA );
+
+
+
+        boolean converged = glm.solve();
+
+        long end = System.nanoTime();
+        System.out.println("That took " + (end-start)/1000 );
+
+        System.out.println("Converged:" + converged);
+        System.out.println("Cost:     " + glm.getCost());
+        System.out.println("Gradient: " + glm.getGradient());
+        System.out.println("Params:   " + Arrays.toString(glm.getThetas().toArray()));
+
+//        final double BIG_EPSILON =0.001;
+//        assertEquals(0.69024,glm.getCost(),EPSILON);
+//
+//        assertEquals(-0.01418,glm.getThetas().toArray()[0],BIG_EPSILON);
+//        assertEquals(-0.3035,glm.getThetas().toArray()[1],BIG_EPSILON);
+//        assertEquals(-0.0168,glm.getThetas().toArray()[2],BIG_EPSILON);
+    }
     public static class Logistic implements Optimizable.ByGradientValue {
         private final Glm glm;
 
@@ -373,7 +429,7 @@ public class TestMallet {
                 isGradientStale = false;
             }
             System.arraycopy(cachedGradient, 0, outputGradient, 0, cachedGradient.length);
-            System.out.println("g:"+Arrays.toString(outputGradient));
+            //System.out.println("g:"+Arrays.toString(outputGradient));
         }
 
         @Override
@@ -386,7 +442,7 @@ public class TestMallet {
                 cachedVal = -glm.getCost();
                 isValStale = false;
             }
-            System.out.println("v:"+cachedVal);
+            //System.out.println("v:"+cachedVal);
             return (cachedVal);
         }
 

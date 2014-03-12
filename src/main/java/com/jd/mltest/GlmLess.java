@@ -306,7 +306,7 @@ public class GlmLess {
 
             deltas.assign(tempDeltas);
 
-            System.out.println("d:" + Arrays.toString(deltas.toArray()));
+            //System.out.println("d:" + Arrays.toString(deltas.toArray()));
             //deltas.assign(Functions.mult(1.0/(double)getNumInstances()));
 
 //            if( isRegularized() ) {
@@ -321,7 +321,7 @@ public class GlmLess {
 //                }
 //            }
 
-            System.out.println("D:" + Arrays.toString(deltas.toArray()));
+            //System.out.println("D:" + Arrays.toString(deltas.toArray()));
             return( deltas );
         }
 
@@ -421,7 +421,7 @@ public class GlmLess {
                 isGradientStale = false;
             }
             System.arraycopy(cachedGradient, 0, outputGradient, 0, cachedGradient.length);
-            System.out.println("g:"+ Arrays.toString(outputGradient));
+            //System.out.println("g:"+ Arrays.toString(outputGradient));
         }
 
         @Override
@@ -434,7 +434,7 @@ public class GlmLess {
                 cachedVal = -glm.getCost();
                 isValStale = false;
             }
-            System.out.println("v:"+cachedVal);
+            //System.out.println("v:"+cachedVal);
             return (cachedVal);
         }
 
