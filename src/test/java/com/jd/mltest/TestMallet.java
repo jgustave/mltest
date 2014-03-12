@@ -129,7 +129,7 @@ public class TestMallet {
         //independent = mapFeature(independent);
 
         Glm     glm     = new Glm(independent,dependent,ALPHA,true, null );
-        GlmLess glmLess = new GlmLess(new DenseDoubleMatrix2D(getIndep(getData2(),false)),dependent,ALPHA,true, null );
+        SimpleLogistic glmLess = new SimpleLogistic(new DenseDoubleMatrix2D(getIndep(getData2(),false)),dependent,ALPHA,true, null );
 
         //For testing start at all 0.
         glm.getThetas().assign(0);
@@ -173,7 +173,7 @@ public class TestMallet {
 
 
     @Test
-    public void testSimple() {
+    public void testSimpleCompare() {
         final double ALPHA          = .001;
         //double[]   response     = new double[] {0,  0, 0,1,0,1,1, 1 };
         double[]   response     = new double[] {0,  0, 0,1,0,1,1, 1 };
@@ -214,7 +214,7 @@ public class TestMallet {
 
         Glm     glm     = new Glm(new DenseDoubleMatrix2D(p2),
                                   dependent,ALPHA,true, null );
-        GlmLess glmLess = new GlmLess(new DenseDoubleMatrix2D(p1),
+        SimpleLogistic glmLess = new SimpleLogistic(new DenseDoubleMatrix2D(p1),
                                       dependent,ALPHA,true, null );
 
         //For testing start at all 0.
@@ -379,7 +379,7 @@ public class TestMallet {
         //independent = mapFeature(independent);
         System.out.println("Go");
         long start = System.nanoTime();
-        GlmLess glm = new GlmLess(independent,dependent,ALPHA,true, LAMBDA );
+        SimpleLogistic glm = new SimpleLogistic(independent,dependent,ALPHA,true, LAMBDA );
 
 
 

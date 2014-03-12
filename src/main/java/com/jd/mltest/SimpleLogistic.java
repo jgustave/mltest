@@ -7,15 +7,15 @@ import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix1D;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
-import java.util.Arrays;
 import java.util.Random;
 
 /**
- * For my personal learning only.. Use a proper library
+ * A very simple Logistic Regression.
+ * Uses Mallet LBFGS Solver.
+ * The common use case is for univariate LR, so I made a few design decisions to use less memory
+ * in exchange for more CPU
  *
- * A Simple GLM class using Linear Descent.
- * For my learning purposes only... use a real library.
- * Sketch of Linear Regression gradient descent
+ *
  * We have our test data, Xij, where i is the instance, and j is the parameter
  * Lets do i is a row, and j is a column
  * We have Yi which is the solution to each Xi linear equation.
@@ -33,7 +33,7 @@ import java.util.Random;
  *
  * Tikhonov_regularization
  */
-public class GlmLess {
+public class SimpleLogistic {
 
     private final DoubleMatrix2D independent;
     private final DoubleMatrix1D dependent;
@@ -54,9 +54,6 @@ public class GlmLess {
     private final double         modifier;
     private final double         regVal;
 
-    //Are we doing logistic regression or linear regression
-    private final boolean        isLogistic;
-
     //Regularization
     private final Double         lambda;
 
@@ -68,15 +65,11 @@ public class GlmLess {
      * @param alpha
      * @param isLogistic
      */
-    public GlmLess (DoubleMatrix2D independent,
-                    DoubleMatrix1D dependent,
-                    double alpha,
-                    boolean isLogistic,
-                    Double lambda) {
+    public SimpleLogistic (DoubleMatrix2D independent, DoubleMatrix1D dependent, double alpha, boolean isLogistic,
+                           Double lambda) {
 
 
         this.lambda                 = lambda;
-        this.isLogistic             = isLogistic;
         this.alpha                  = alpha;
 
         this.independent            = independent;
@@ -91,14 +84,12 @@ public class GlmLess {
             thetas.set(x,rand.nextGaussian());
         }
 
-        if( this.isLogistic ) {
-            //TODO: Not sure if this should be alpha/m or not.
-                //I think you are confused between gradient descent and
-                //the BFGS, etc that just wants J and derivative.
-            this.modifier    = alpha;
-        }else {
-            this.modifier    = alpha / (double)independent.rows();
-        }
+
+        //TODO: Not sure if this should be alpha/m or not.
+            //I think you are confused between gradient descent and
+            //the BFGS, etc that just wants J and derivative.
+        this.modifier    = alpha;
+
         if( lambda != null ) {
             regVal = (alpha*lambda)/dependent.size();
         }else {
@@ -194,13 +185,7 @@ public class GlmLess {
             sum += params[x] * thetas.get(x+1);
         }
 
-        if( isLogistic ) {
-            return( logit(sum) );
-
-        }else {
-            //Intercept + x1*theta1 + x2*theta2 ...
-            return( sum );
-        }
+        return( logit(sum) );
     }
 
 
@@ -255,59 +240,48 @@ public class GlmLess {
         //calcHypothesisError();
         //System.out.println("H:" + Arrays.toString(hypothesies.toArray()));
 
-        if( isLogistic ) {
-            //For Regularized LR, the first term (intercept) is not regularized.
+        //For Regularized LR, the first term (intercept) is not regularized.
 
-            //delta is in hypothesis after calcHypothesisError()
+        //delta is in hypothesis after calcHypothesisError()
 
-            //delta = (1/m) * SUM( delta * xj )
-
+        //delta = (1/m) * SUM( delta * xj )
 
 
-            double[] tempDeltas = new double[deltas.size()];
 
-            final int numSamples = getNumInstances();
-            for( int x=0;x<numSamples;x++) { //for every row( sample)
+        double[] tempDeltas = new double[deltas.size()];
 
-                //Assume an intercept independent var of 1.0 in the (virtual) first column of independent matrix.
-                double tempHypothesis = thetas.getQuick(0); //Assumed intercept (1.0 * theta)
-                for( int y=0;y<independent.columns();y++) { //for every indep. var (column)
-                    tempHypothesis += independent.getQuick(x,y) * thetas.getQuick(1+y); //+1 because of intercept
-                }
-                tempHypothesis = logit(tempHypothesis);
+        final int numSamples = getNumInstances();
+        for( int x=0;x<numSamples;x++) { //for every row( sample)
 
-                //Now update hyp, with the delta between
-                double response  = dependent.getQuick(x);
-                tempHypothesis -= response;
+            //Assume an intercept independent var of 1.0 in the (virtual) first column of independent matrix.
+            double tempHypothesis = thetas.getQuick(0); //Assumed intercept (1.0 * theta)
+            for( int y=0;y<independent.columns();y++) { //for every indep. var (column)
+                tempHypothesis += independent.getQuick(x,y) * thetas.getQuick(1+y); //+1 because of intercept
+            }
+            tempHypothesis = logit(tempHypothesis);
+
+            //Now update hyp, with the delta between
+            double response  = dependent.getQuick(x);
+            tempHypothesis -= response;
 
 
-                //hypothesies.setQuick(x,tempHypothesis);
-                double error = tempHypothesis;
-                tempDeltas[0] += error;
-                for( int y=1;y<tempDeltas.length;y++) {
-                    tempDeltas[y] += (error * independent.get(x,y-1) );
-                }
+            //NOTE: this is where we are jumping around memory a bit
 
+            double error = tempHypothesis;
+            tempDeltas[0] += error;
+            for( int y=1;y<tempDeltas.length;y++) {
+                tempDeltas[y] += (error * independent.get(x,y-1) );
             }
 
-//
-//            for( int x=0;x<getNumInstances();x++) {
-//                double error = hypothesies.getQuick(x);
-//                tempDeltas[0] += error;
-//                for( int y=1;y<tempDeltas.length;y++) {
-//                    tempDeltas[y] += (error * independent.get(x,y-1) );
-//                }
-//            }
+        }
 
-            //scale by (1/m)
-            for( int x=0;x<deltas.size();x++) {
-                tempDeltas[x] *= 1.0 / (double)getNumInstances();
-            }
+        //scale by (1/m)
+        for( int x=0;x<deltas.size();x++) {
+            tempDeltas[x] *= 1.0 / (double)getNumInstances();
+        }
 
-            deltas.assign(tempDeltas);
+        deltas.assign(tempDeltas);
 
-            //System.out.println("d:" + Arrays.toString(deltas.toArray()));
-            //deltas.assign(Functions.mult(1.0/(double)getNumInstances()));
 
 //            if( isRegularized() ) {
 //
@@ -321,11 +295,9 @@ public class GlmLess {
 //                }
 //            }
 
-            //System.out.println("D:" + Arrays.toString(deltas.toArray()));
-            return( deltas );
-        }
+        //System.out.println("D:" + Arrays.toString(deltas.toArray()));
+        return( deltas );
 
-        return( null );
     }
 
     /**
@@ -364,15 +336,12 @@ public class GlmLess {
         LimitedMemoryBFGS   optimizer = new LimitedMemoryBFGS(opt);
         optimizer.setTolerance(.000001);
 
-
-
-
         boolean converged = false;
 
         try {
             converged = optimizer.optimize();
-        } catch (Exception e) {
-            System.out.println(e);
+        } catch (Exception ignored) {
+            //System.out.println(e);
             // This exception may be thrown if L-BFGS
             //  cannot step in the current direction.
             // This condition does not necessarily mean that
@@ -393,15 +362,15 @@ public class GlmLess {
 
 
     public static class Logistic implements Optimizable.ByGradientValue {
-        private final GlmLess glm;
+        private final SimpleLogistic glm;
 
-        private boolean  isValStale      = true;
-        private double   cachedVal       = 0.0;
+        private boolean isValStale = true;
+        private double  cachedVal  = 0.0;
 
         private boolean  isGradientStale = true;
         private double[] cachedGradient  = null;
 
-        public Logistic (GlmLess glm) {
+        public Logistic (SimpleLogistic glm) {
             this.glm = glm;
         }
 
@@ -429,7 +398,7 @@ public class GlmLess {
          * I assume this is cost fn
          */
         public double getValue () {
-            if( isValStale ) {
+            if (isValStale) {
                 isGradientStale = true;
                 cachedVal = -glm.getCost();
                 isValStale = false;
