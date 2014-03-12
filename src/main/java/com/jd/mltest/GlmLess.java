@@ -2,12 +2,9 @@ package com.jd.mltest;
 
 import cc.mallet.optimize.LimitedMemoryBFGS;
 import cc.mallet.optimize.Optimizable;
-import cern.colt.function.DoubleFunction;
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix1D;
-import cern.colt.matrix.linalg.SeqBlas;
-import cern.jet.math.Functions;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
 import java.util.Arrays;
@@ -38,18 +35,12 @@ import java.util.Random;
  */
 public class GlmLess {
 
-    //private final Algebra        algebra        = new Algebra();
-
-
     private final DoubleMatrix2D independent;
     private final DoubleMatrix1D dependent;
     private final DoubleMatrix1D thetas;
 
     //For Feature Scaling.
     private final SummaryStatistics[] columnStats;
-
-    //Size M(num examples). (h)  which is independent * theta
-    private final DoubleMatrix1D hypothesies;
 
     //changes to apply to theta
     private final DoubleMatrix1D deltas;
@@ -92,7 +83,6 @@ public class GlmLess {
         this.dependent              = dependent;
 
         this.thetas                 = new DenseDoubleMatrix1D(independent.columns() + 1);
-        this.hypothesies            = new DenseDoubleMatrix1D(dependent.size());
 
         this.deltas                 = new DenseDoubleMatrix1D(thetas.size());
 
@@ -214,126 +204,6 @@ public class GlmLess {
     }
 
 
-    /**
-     * hypothesis is updated with (h - y)
-     */
-    private void calcHypothesisError() {
-//        //Generalized linear algebraic matrix-vector multiply; y = alpha*A*x + beta*y. In fact equivalent to A.zMult(x,y,alpha,beta,transposeA).
-//
-//        //independent is src matrix A
-//        //thetas is x
-//        //In Place matrix x vector
-//        SeqBlas.seqBlas.dgemv(false,1.0,independent,thetas,0,hypothesies);
-//
-////        double accum = 0;
-////        for( int x=0;x<independent.rows();x++) {
-////            accum = 0;
-////            for( int y=0;y<independent.columns();y++) {
-////                double ind = independent.getQuick(x,y);
-////                double theta = thetas.get(y);
-////                accum += ind * theta;
-////            }
-////        }
-//
-//        //hypothesies = algebra.mult( independent, thetas );
-//
-//
-//        if( isLogistic ) {
-//            hypothesies.assign(new DoubleFunction() {
-//                @Override
-//                public double apply (double val) {
-//                    return( logit( val ) );
-//                }
-//            });
-//        }
-//
-//        //hyp = hyp - dep
-//        hypothesies.assign(dependent, Functions.minus);
-
-        final int numSamples = getNumInstances();
-        for( int x=0;x<numSamples;x++) { //for every row( sample)
-
-            //Assume an intercept independent var of 1.0 in the (virtual) first column of independent matrix.
-            double tempHypothesis = thetas.getQuick(0); //Assumed intercept (1.0 * theta)
-            for( int y=0;y<independent.columns();y++) { //for every indep. var (column)
-                tempHypothesis += independent.getQuick(x,y) * thetas.getQuick(1+y); //+1 because of intercept
-            }
-            tempHypothesis = logit(tempHypothesis);
-
-            //Now update hyp, with the delta between
-            double response  = dependent.getQuick(x);
-            tempHypothesis -= response;
-
-
-            hypothesies.setQuick(x,tempHypothesis);
-        }
-
-
-    }
-//
-//    /**
-//     * Return the current cost function
-//     * @return
-//     */
-//    public double getCost() {
-//
-//            //Sum for all samples M
-//            //(-1/m) * SUM(  (Y * log(h)) + ((1-Y) * log(1-h))  )
-//
-//            //two vector cross products. gives two scalars. add them. mult by (-1/m)
-//                //Y * log(h)
-//                //(1-Y) * log(1-h)
-//
-//
-//
-//            //TOtally inefficient.. but will figure out the api later...
-//            DoubleMatrix1D h        = algebra.mult( independent, thetas );
-//            h.assign(new DoubleFunction() {
-//                @Override
-//                public double apply (double val) {
-//                    return( logit( val ) );
-//                }
-//            });
-//
-//            //Make copies of the hypothesis array (YHat) (Left/right refers to left of + above.)
-////            DoubleMatrix1D lhs      = h.copy();
-////            DoubleMatrix1D rhs      = h.copy();
-////            DoubleMatrix1D rhDep    = dependent.copy();
-//            costLhs.assign(h);
-//            costRhs.assign(h);
-//            costRhDep.assign(dependent);
-//
-//            costLhs.assign( Functions.log );
-//            costRhs.assign( new DoubleFunction() {
-//                @Override
-//                public double apply (double val) {
-//                    return( Math.log(1.0-val));
-//                }
-//            } );
-//            costRhDep.assign( new DoubleFunction() {
-//                @Override
-//                public double apply (double val) {
-//                    return( 1.0-val);
-//                }
-//            } );
-//
-//            double lcp  = algebra.mult(dependent,costLhs);
-//            double rcp  = algebra.mult(costRhDep,costRhs);
-//            double cost = (-1.0/getNumInstances())*(lcp+rcp);
-//
-//            if( isRegularized() ) {
-//                double regularize = 0;
-//                //(Lambda/(2m))* sum(theta^2)
-//                //But sum is from 1 to N.. Skip intercept?
-//                for( int x=0;x<thetas.size();x++) {
-//                    regularize += ( thetas.getQuick(x) * thetas.getQuick(x) );
-//                }
-//                regularize *= (lambda/(2*getNumInstances()));
-//                cost += regularize;
-//            }
-//            return(cost);
-//    }
-
     //Sum for all samples M
     //(-1/m) * SUM(  (Y * log(h)) + ((1-Y) * log(1-h))  )
     public double getCost() {
@@ -382,8 +252,8 @@ public class GlmLess {
 
         //TODO: once we get it working up to here.. we can drop the hypothesis matrix as well.. and getGradient in one step
         //hypothesis matrix is set to (h-y)
-        calcHypothesisError();
-        System.out.println("H:" + Arrays.toString(hypothesies.toArray()));
+        //calcHypothesisError();
+        //System.out.println("H:" + Arrays.toString(hypothesies.toArray()));
 
         if( isLogistic ) {
             //For Regularized LR, the first term (intercept) is not regularized.
@@ -392,21 +262,49 @@ public class GlmLess {
 
             //delta = (1/m) * SUM( delta * xj )
 
-            double[] foo = new double[deltas.size()];
-            for( int x=0;x<getNumInstances();x++) {
-                double error = hypothesies.getQuick(x);
-                foo[0] += error;
-                for( int y=1;y<foo.length;y++) {
-                    foo[y] += (error * independent.get(x,y-1) );
+
+
+            double[] tempDeltas = new double[deltas.size()];
+
+            final int numSamples = getNumInstances();
+            for( int x=0;x<numSamples;x++) { //for every row( sample)
+
+                //Assume an intercept independent var of 1.0 in the (virtual) first column of independent matrix.
+                double tempHypothesis = thetas.getQuick(0); //Assumed intercept (1.0 * theta)
+                for( int y=0;y<independent.columns();y++) { //for every indep. var (column)
+                    tempHypothesis += independent.getQuick(x,y) * thetas.getQuick(1+y); //+1 because of intercept
                 }
+                tempHypothesis = logit(tempHypothesis);
+
+                //Now update hyp, with the delta between
+                double response  = dependent.getQuick(x);
+                tempHypothesis -= response;
+
+
+                //hypothesies.setQuick(x,tempHypothesis);
+                double error = tempHypothesis;
+                tempDeltas[0] += error;
+                for( int y=1;y<tempDeltas.length;y++) {
+                    tempDeltas[y] += (error * independent.get(x,y-1) );
+                }
+
             }
+
+//
+//            for( int x=0;x<getNumInstances();x++) {
+//                double error = hypothesies.getQuick(x);
+//                tempDeltas[0] += error;
+//                for( int y=1;y<tempDeltas.length;y++) {
+//                    tempDeltas[y] += (error * independent.get(x,y-1) );
+//                }
+//            }
 
             //scale by (1/m)
             for( int x=0;x<deltas.size();x++) {
-                foo[x] *= 1.0 / (double)getNumInstances();
+                tempDeltas[x] *= 1.0 / (double)getNumInstances();
             }
 
-            deltas.assign(foo);
+            deltas.assign(tempDeltas);
 
             System.out.println("d:" + Arrays.toString(deltas.toArray()));
             //deltas.assign(Functions.mult(1.0/(double)getNumInstances()));
@@ -575,5 +473,4 @@ public class GlmLess {
             isGradientStale = true;
         }
     }
-
 }
