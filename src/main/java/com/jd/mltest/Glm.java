@@ -52,6 +52,10 @@ public class Glm {
     //changes to apply to theta
     private final DoubleMatrix1D deltas;
 
+    private final DoubleMatrix1D costLhs;//      = h.copy();
+    private final DoubleMatrix1D costRhs;//      = h.copy();
+    private final DoubleMatrix1D costRhDep;//    = dependent.copy();
+
 
     //learning rate
     @SuppressWarnings ({"FieldCanBeLocal", "UnusedDeclaration"})
@@ -93,6 +97,10 @@ public class Glm {
         this.hypothesies            = new DenseDoubleMatrix1D(dependent.size());
 
         this.deltas                 = new DenseDoubleMatrix1D(thetas.size());
+
+        this.costLhs   = this.hypothesies.copy();
+        this.costRhs   = this.hypothesies.copy();
+        this.costRhDep = this.dependent.copy();
 
         Random rand = new Random();
         for( int x=0;x<thetas.size();x++) {
@@ -269,26 +277,29 @@ public class Glm {
             });
 
             //Make copies of the hypothesis array (YHat) (Left/right refers to left of + above.)
-            DoubleMatrix1D lhs      = h.copy();
-            DoubleMatrix1D rhs      = h.copy();
-            DoubleMatrix1D rhDep    = dependent.copy();
+//            DoubleMatrix1D lhs      = h.copy();
+//            DoubleMatrix1D rhs      = h.copy();
+//            DoubleMatrix1D rhDep    = dependent.copy();
+            costLhs.assign(h);
+            costRhs.assign(h);
+            costRhDep.assign(dependent);
 
-            lhs.assign( Functions.log );
-            rhs.assign( new DoubleFunction() {
+            costLhs.assign( Functions.log );
+            costRhs.assign( new DoubleFunction() {
                 @Override
                 public double apply (double val) {
                     return( Math.log(1.0-val));
                 }
             } );
-            rhDep.assign( new DoubleFunction() {
+            costRhDep.assign( new DoubleFunction() {
                 @Override
                 public double apply (double val) {
                     return( 1.0-val);
                 }
             } );
 
-            double lcp = algebra.mult(dependent,lhs);
-            double rcp = algebra.mult(rhDep,rhs);
+            double lcp  = algebra.mult(dependent,costLhs);
+            double rcp  = algebra.mult(costRhDep,costRhs);
             double cost = (-1.0/getNumInstances())*(lcp+rcp);
 
             if( isRegularized() ) {
