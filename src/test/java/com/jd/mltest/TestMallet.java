@@ -112,7 +112,6 @@ public class TestMallet {
     @Test
     public void testMalletTwo() {
         final double ALPHA          = .001;
-        final double LAMBDA         = 0.0;
 
 
         //rows,columns
@@ -129,13 +128,14 @@ public class TestMallet {
         //Add all sort so interacitons
         //independent = mapFeature(independent);
 
-        Glm glm = new Glm(independent,dependent,ALPHA,true, LAMBDA );
+        Glm     glm     = new Glm(independent,dependent,ALPHA,true, null );
+        GlmLess glmLess = new GlmLess(new DenseDoubleMatrix2D(getIndep(getData2(),false)),dependent,ALPHA,true, null );
 
         //For testing start at all 0.
         glm.getThetas().assign(0);
+        glmLess.getThetas().assign(0);
 
-
-        Logistic  opt       = new Logistic(glm);
+        Logistic            opt       = new Logistic(glm);
         LimitedMemoryBFGS   optimizer = new LimitedMemoryBFGS(opt);
         optimizer.setTolerance(.000001);
 
@@ -154,6 +154,9 @@ public class TestMallet {
             //  the optimizer has failed, but it doesn't want
             //  to claim to have succeeded...
         }
+
+        boolean conv = glmLess.solve();
+
 
         System.out.println("Converged:" + converged);
         System.out.println("Cost:     " + glm.getCost());

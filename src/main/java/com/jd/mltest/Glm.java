@@ -421,7 +421,7 @@ public class Glm {
 //     * M the number of data instances, rows. etc.
 //     * @return
 //     */
-    public long getNumInstances() {
+    public int getNumInstances() {
         return( dependent.size() );
     }
 
