@@ -268,9 +268,10 @@ public class Glm {
                 }
             });
 
-            DoubleMatrix1D lhs      = new DenseDoubleMatrix1D(h.toArray());
-            DoubleMatrix1D rhs      = new DenseDoubleMatrix1D(h.toArray());
-            DoubleMatrix1D rhDep    = new DenseDoubleMatrix1D(dependent.toArray());
+            //Make copies of the hypothesis array (YHat) (Left/right refers to left of + above.)
+            DoubleMatrix1D lhs      = h.copy();
+            DoubleMatrix1D rhs      = h.copy();
+            DoubleMatrix1D rhDep    = dependent.copy();
 
             lhs.assign( Functions.log );
             rhs.assign( new DoubleFunction() {
@@ -286,7 +287,9 @@ public class Glm {
                 }
             } );
 
-            double cost = (-1.0/getNumInstances())*(algebra.mult(dependent,lhs) + algebra.mult(rhDep,rhs));
+            double lcp = algebra.mult(dependent,lhs);
+            double rcp = algebra.mult(rhDep,rhs);
+            double cost = (-1.0/getNumInstances())*(lcp+rcp);
 
             if( isRegularized() ) {
                 double regularize = 0;
