@@ -33,10 +33,13 @@ import java.util.Random;
  *
  * Tikhonov_regularization
  */
+@SuppressWarnings ("unused")
 public class SimpleLogistic {
 
     private final DoubleMatrix2D independent;
+    //TODO: lets change this to a bitvector or boolean[], or byte[].. Depending on which is fastest
     private final DoubleMatrix1D dependent;
+
     private final DoubleMatrix1D thetas;
 
     //For Feature Scaling.
@@ -59,14 +62,16 @@ public class SimpleLogistic {
 
     private       boolean        isScaled = false;
 
+    public SimpleLogistic (DoubleMatrix2D independent, DoubleMatrix1D dependent, double alpha) {
+        this( independent, dependent, alpha, null);
+    }
     /**
      * @param independent
      * @param dependent
-     * @param alpha
-     * @param isLogistic
+     * @param alpha learning rate
+     * @param lambda Regularization
      */
-    public SimpleLogistic (DoubleMatrix2D independent, DoubleMatrix1D dependent, double alpha, boolean isLogistic,
-                           Double lambda) {
+    public SimpleLogistic (DoubleMatrix2D independent, DoubleMatrix1D dependent, double alpha, Double lambda) {
 
 
         this.lambda                 = lambda;

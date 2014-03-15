@@ -18,3 +18,9 @@ Seems to be performing the best. No strange errors, minimizes by default, and it
 And since this has become a blog of sorts.. Here is Another ultimate goal: Asynchronous gradient descent [http://ai.stanford.edu/~quocle/]
 
 12/9/13 9 months and this project has long since fallen off the list of things I have time for. Maybe more time soon. :)
+
+3/15/14 Hey look at that.. I got to use this for my real job. I added a SimpleLogistic, which is actually reasonably
+memory efficient and gets rid of some matrx nonsense from the original version. I've stripped out the regularization for
+now. The use case was to calculate a ton of univariate Logistic regressions. I will eventually go back and see about
+changing the dependent to something more compact than a matrix of doubles (seems a waste to take 8 bytes to say 1 or 0).
+Also want to add AUC/AIC/etc.
